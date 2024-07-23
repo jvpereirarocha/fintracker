@@ -25,7 +25,7 @@ mapped_registry = registry()
 class User:
     __tablename__ = 'users'
 
-    user_id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    user_id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
