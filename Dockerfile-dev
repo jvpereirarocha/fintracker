@@ -5,9 +5,20 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 EXPOSE 8000
 
 COPY . .
+
+RUN groupadd -r admin && useradd -r -g admin admin
+RUN chown -R admin:admin /app
+RUN chown -R admin:admin /app/app/migrations
+RUN chown admin:admin /app/entrypoint.sh
+USER admin
+RUN chmod +x /app/entrypoint.sh
+SHELL ["/bin/bash"]
+
+CMD ["/bin/bash", "/app/entrypoint.sh"]
