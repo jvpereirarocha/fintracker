@@ -53,7 +53,7 @@ async def create_user(user_schema: CreateUser):
         username=db_user.username,
         email=db_user.email
     )
-    return {"message": "User created!", "user": user_public}
+    return user_public
 
 
 app.include_router(router=users_router)
