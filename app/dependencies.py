@@ -1,6 +1,6 @@
 from app.database import Session
 
 
-async def get_db():
+async def get_session():
     with Session() as session:
-        yield session
+        return session
