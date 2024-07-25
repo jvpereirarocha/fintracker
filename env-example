@@ -1,0 +1,4 @@
+DATABASE_URL='driver://user:password@host:port/dbname'
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+POSTGRES_DB=dbname
