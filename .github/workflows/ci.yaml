@@ -1,0 +1,15 @@
+name: Backend pipeline
+run-name: FinancAPI actions
+on:
+  push:
+    paths:
+      - 'app/**'
+      - '!app/migrations/**'
+jobs:
+  authentication:
+    runs-on: ubuntu:latest
+    steps:
+    - id: auth
+      uses: google-github-actions/auth@v0.4.0
+      with:
+        workload_identity_provider: ''
