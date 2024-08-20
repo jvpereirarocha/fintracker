@@ -1,24 +1,21 @@
 FROM python:3.12.4-slim
-
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
-
+WORKDIR /app
 COPY . .
-
 RUN groupadd -r admin && useradd -r -g admin admin
 RUN chown -R admin:admin /app
 RUN chown -R admin:admin /app/app/migrations
 RUN chown admin:admin /app/entrypoint.sh
-USER admin
 RUN chmod +x /app/entrypoint.sh
+
+RUN pip install -r requirements.txt
+RUN apt-get update && apt-get install -y curl
+HEALTHCHECK --interval=10s --timeout=7s \
+    CMD curl -f http://localhost:8000/users/test || exit 1
+
 SHELL ["/bin/bash"]
+USER admin
 
 CMD ["/bin/bash", "/app/entrypoint.sh"]
