@@ -56,4 +56,11 @@ async def create_user(user_schema: CreateUser):
     return user_public
 
 
+@users_router.get(
+    "/test",
+)
+def test_endpoint():
+    return {"message": "The API is working :)"}
+
+
 app.include_router(router=users_router)
