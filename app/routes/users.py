@@ -72,6 +72,9 @@ async def get_users():
     return public_users_list
 
 
+@users_router.post("/login", response_model=PublicToken, status_code=HTTPStatus.OK)
+
+
 @users_router.get(
     "/test",
 )

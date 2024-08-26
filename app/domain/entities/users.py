@@ -15,7 +15,7 @@ class UserEntity:
     @classmethod
     def _change_password_to_bytes(cls, password: str) -> bytes:
         return bytes(password.encode('utf-8'))
-    
+
     @classmethod
     def _hash_password(cls, password_as_bytes: bytes) -> bytes:
         return bcrypt.hashpw(password_as_bytes, bcrypt.gensalt())
@@ -29,7 +29,14 @@ class UserEntity:
             password_as_bytes=password_bytes
         )
         return hashed_password
-    
+
+    @classmethod
+    def password_is_correct(cls, text_password: str, encrypted_password: bytes) -> bool:
+        return bcrypt.checkpw(
+            password=cls.encrypted_password(password=text_password),
+            hashed_password=encrypted_password,
+        )
+
     @classmethod
     def new_user(cls, user_schema: CreateUser) -> Self:
         return cls(

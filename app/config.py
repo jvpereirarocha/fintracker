@@ -11,4 +11,5 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-
+    JWT_SECRET_KEY: str
+    ALGORITHM: str
