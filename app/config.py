@@ -13,3 +13,4 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     JWT_SECRET_KEY: str
     ALGORITHM: str
+    TOKEN_TYPE: str

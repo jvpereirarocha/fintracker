@@ -15,6 +15,11 @@ class CreateUser(BaseModel):
         return self
 
 
+class LoginUser(BaseModel):
+    username: str
+    password: str
+
+
 class UserPublic(BaseModel):
     username: str
     email: str

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Self
 import bcrypt
 
-from app.schemas.users import CreateUser
+from app.schemas.users import CreateUser, PublicToken
 
 
 @dataclass
@@ -31,10 +31,10 @@ class UserEntity:
         return hashed_password
 
     @classmethod
-    def password_is_correct(cls, text_password: str, encrypted_password: bytes) -> bool:
+    def verify_password(cls, plain_text_password: str, stored_password: str) -> bool:
         return bcrypt.checkpw(
-            password=cls.encrypted_password(password=text_password),
-            hashed_password=encrypted_password,
+            password=plain_text_password.encode('utf-8'),
+            hashed_password=cls._change_password_to_bytes(password=stored_password)
         )
 
     @classmethod
