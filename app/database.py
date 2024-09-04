@@ -15,6 +15,7 @@ from sqlalchemy.orm import (
     sessionmaker,
     relationship
 )
+from sqlalchemy.sql.sqltypes import LargeBinary
 from app.config import Settings
 
 
@@ -27,7 +28,8 @@ class User:
 
     user_id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(unique=True)
-    password: Mapped[str]
+    password_hash: Mapped[bytes] = mapped_column(LargeBinary(60))
+    password_salt: Mapped[bytes] = mapped_column(LargeBinary(29))
     email: Mapped[str] = mapped_column(unique=True)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(onupdate=func.now())
@@ -35,9 +37,9 @@ class User:
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
 
     __table_args__ = (
-        Index('user_email_pass_idx', 'username', 'email', 'password'),
-        Index('email_pass_idx', 'email', 'password'),
-        Index('user_pass_idx', 'username', 'password'),
+        Index('user_email_pass_idx', 'username', 'email', 'password_hash', 'password_salt'),
+        Index('email_pass_idx', 'email', 'password_hash', 'password_salt'),
+        Index('user_pass_idx', 'username', 'password_hash', 'password_salt'),
         Index('user_created_at_idx', 'username', 'created_at'),
         Index('email_created_at_idx', 'email', 'created_at'),
         Index('user_updated_at_idx', 'username', 'updated_at'),
@@ -53,7 +55,7 @@ class TypeTransaction(Enum):
 @mapped_registry.mapped_as_dataclass
 class Transaction:
     __tablename__ = 'transactions'
-    
+
     transaction_id: Mapped[int] = mapped_column(init=False, primary_key=True)
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Float(asdecimal=True), nullable=False)
@@ -74,7 +76,7 @@ class Transaction:
 
 
 engine = sqlalchemy.create_engine(
-    url=Settings().DATABASE_URL
+    url=Settings().DATABASE_URL # type: ignore
 )
 
 Session = sessionmaker(engine)
