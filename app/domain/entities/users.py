@@ -9,40 +9,45 @@ from app.schemas.users import CreateUser, PublicToken
 class UserEntity:
     user_id: int = field(init=False)
     username: str
-    hashed_password: bytes
     email: str
+    password_hash: bytes
+    password_salt: bytes
 
     @classmethod
     def _change_password_to_bytes(cls, password: str) -> bytes:
-        return bytes(password.encode('utf-8'))
+        return password.encode('utf-8')
 
     @classmethod
-    def _hash_password(cls, password_as_bytes: bytes) -> bytes:
-        return bcrypt.hashpw(password_as_bytes, bcrypt.gensalt())
+    def _get_hash_and_salt_password(cls, password_as_bytes: bytes) -> tuple[bytes, bytes]:
+        salt = bcrypt.gensalt()
+        generated_hash = bcrypt.hashpw(password_as_bytes, salt=salt)
+        return generated_hash, salt
 
     @classmethod
-    def encrypted_password(cls, password: str) -> bytes:
+    def encrypted_password(cls, password: str) -> tuple[bytes, bytes]:
         password_bytes: bytes = cls._change_password_to_bytes(
             password=password
         )
-        hashed_password = cls._hash_password(
+        password_hash, password_salt = cls._get_hash_and_salt_password(
             password_as_bytes=password_bytes
         )
-        return hashed_password
+        return password_hash, password_salt
 
     @classmethod
-    def verify_password(cls, plain_text_password: str, stored_password: str) -> bool:
+    def verify_password(cls, plain_text_password: str, password_hash: bytes) -> bool:
         return bcrypt.checkpw(
             password=plain_text_password.encode('utf-8'),
-            hashed_password=cls._change_password_to_bytes(password=stored_password)
+            hashed_password=password_hash
         )
 
     @classmethod
     def new_user(cls, user_schema: CreateUser) -> Self:
+        password_hash, password_salt = cls.encrypted_password(
+            password=user_schema.password,
+        )
         return cls(
             username=user_schema.username,
-            hashed_password=cls.encrypted_password(
-                password=user_schema.password
-            ),
-            email=user_schema.email
+            email=user_schema.email,
+            password_hash=password_hash,
+            password_salt=password_salt,
         )
