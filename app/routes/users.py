@@ -42,7 +42,8 @@ async def create_user(user_schema: CreateUser):
     )
     db_user = User(
         email=user_entity.email,
-        password=user_entity.hashed_password,
+        password_hash=user_entity.password_hash,
+        password_salt=user_entity.password_salt,
         username=user_entity.username,
         transactions=[],
         updated_at=datetime.now()
@@ -90,7 +91,7 @@ async def login(user: LoginUser) -> PublicToken:
 
     user_authenticated = UserEntity.verify_password(
         plain_text_password=user.password,
-        stored_password=db_user.password
+        password_hash=db_user.password_hash,
     )
 
     if not user_authenticated:

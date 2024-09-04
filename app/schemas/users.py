@@ -1,12 +1,12 @@
 from typing import Self
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, model_validator, Field
 
 
 class CreateUser(BaseModel):
     username: str
     email: EmailStr
     password: str
-    confirm_password: str
+    confirm_password: str = Field(alias='confirmPassword')
 
     @model_validator(mode='after')
     def validate_password(self) -> Self:
