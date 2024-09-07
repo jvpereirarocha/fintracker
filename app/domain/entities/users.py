@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Self
 import bcrypt
 
-from app.schemas.users import CreateUser, PublicToken
+from app.schemas.users import CreateUser
 
 
 @dataclass

@@ -1,9 +1,8 @@
 from enum import StrEnum, auto
-from datetime import timedelta
-from typing import Optional
-import jwt
+from datetime import datetime, timedelta
 from app.config import Settings
-from app.schemas.users import PublicToken
+import jwt
+from app.schemas.auth import PublicToken
 
 
 settings = Settings() # type: ignore
@@ -24,7 +23,8 @@ class Token:
         username: str,
         token_expiration_time: timedelta
     ) -> str:
-        data = {"sub": username, "exp": token_expiration_time}
+        expiration_date = datetime.now() + token_expiration_time
+        data = {"sub": username, "exp": expiration_date}
         encoded_jwt = jwt.encode(payload=data, key=settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM)
         return encoded_jwt
 
