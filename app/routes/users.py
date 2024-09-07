@@ -8,7 +8,8 @@ from app.database import User
 from app.dependencies import get_session
 from app.domain.entities.users import UserEntity
 from app.domain.value_objects.token import Token
-from app.schemas.users import CreateUser, PublicToken, UserPublic, LoginUser
+from app.schemas.users import CreateUser, UserPublic, LoginUser
+from app.schemas.auth import PublicToken
 
 
 users_router = APIRouter(

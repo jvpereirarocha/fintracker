@@ -23,8 +23,3 @@ class LoginUser(BaseModel):
 class UserPublic(BaseModel):
     username: str
     email: str
-
-
-class PublicToken(BaseModel):
-    access_token: str
-    token_type: str
