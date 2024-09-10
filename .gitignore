@@ -2,4 +2,4 @@
 __pycache__
 *.pyc
 pyrightconfig.json
-k8s/db-secrets.yaml
+k8s/*-secrets.yaml
