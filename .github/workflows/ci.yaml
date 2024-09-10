@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: actions
+    runs-on: self-hosted
     steps:
       # 1 code checkout
       - name: Checkout code
