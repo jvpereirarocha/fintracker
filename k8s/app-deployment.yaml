@@ -15,27 +15,40 @@ spec:
     spec:
       containers:
         - name: fintracker-web
-          image: jvrochadev/fintracker:1.0.0
+          image: jvrochadev/fintracker:1.0.1
           ports:
             - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: fintracker-configmap
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: db-secret
+                  name: fintracker-secrets
                   key: DATABASE_URL
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: db-secret
+                  name: fintracker-secrets
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-secret
+                  name: fintracker-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: db-secret
+                  name: fintracker-secrets
                   key: POSTGRES_DB
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fintracker-secrets
+                  key: JWT_SECRET_KEY
+            - name: ALGORITHM
+              valueFrom:
+                secretKeyRef:
+                  name: fintracker-secrets
+                  key: ALGORITHM
