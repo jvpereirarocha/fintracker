@@ -21,7 +21,7 @@ RUN apt-get update \
     && locale-gen \
     && rm -rf /var/lib/apt/lists/*
 
-HEALTHCHECK --interval=50s --timeout=30s \
+HEALTHCHECK --interval=10s --timeout=5s \
     CMD curl -f http://localhost:8000/users/test || exit 1
 
 SHELL ["/bin/bash"]
