@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu:latest
+    runs-on: actions
     steps:
       # 1 code checkout
       - name: Checkout code
