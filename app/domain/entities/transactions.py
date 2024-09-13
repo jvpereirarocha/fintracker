@@ -10,7 +10,7 @@ class TypeTransaction(Enum):
     EXPENSE = "expense"
 
 
-@dataclass
+@dataclass()
 class TransactionEntity:
     transaction_id: int = field(init=False)
     description: str
@@ -19,12 +19,12 @@ class TransactionEntity:
     registration_date: datetime
     user_id: int
 
-    def _validate_amount(value: Decimal) -> Decimal:
-        if value < 0:
+    @classmethod
+    def validate_amount(cls, amount: Decimal) -> Decimal:
+        if amount < 0:
             raise ValueError("O valor não pode ser menor que zero")
         
-        return value
-
+        return amount
 
     @classmethod
     def new_transaction(
@@ -37,8 +37,8 @@ class TransactionEntity:
         
         return cls(
             description=description,
-            amount=cls._validate_amount(value=amount),
-            type_of_transaction=type_of_transaction,
+            amount=cls.validate_amount(amount=amount),
+            type_of_transaction=TypeTransaction.EXPENSE if type_of_transaction == "expense" else TypeTransaction.INCOME,
             registration_date=datetime.now(),
             user_id=user_id
         )
