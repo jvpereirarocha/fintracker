@@ -23,7 +23,7 @@ class TransactionEntity:
     def validate_amount(cls, amount: Decimal) -> Decimal:
         if amount < 0:
             raise ValueError("O valor não pode ser menor que zero")
-        
+
         return amount
 
     @classmethod
@@ -32,13 +32,17 @@ class TransactionEntity:
         description: str,
         amount: Decimal,
         type_of_transaction: Literal["income", "expense"],
-        user_id: int
+        user_id: int,
     ) -> Self:
-        
+
         return cls(
             description=description,
             amount=cls.validate_amount(amount=amount),
-            type_of_transaction=TypeTransaction.EXPENSE if type_of_transaction == "expense" else TypeTransaction.INCOME,
+            type_of_transaction=(
+                TypeTransaction.EXPENSE
+                if type_of_transaction == "expense"
+                else TypeTransaction.INCOME
+            ),
             registration_date=datetime.now(),
-            user_id=user_id
+            user_id=user_id,
         )

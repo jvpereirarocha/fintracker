@@ -5,7 +5,7 @@ import jwt
 from app.schemas.auth import PublicToken
 
 
-settings = Settings() # type: ignore
+settings = Settings()  # type: ignore
 
 
 class TokenType(StrEnum):
@@ -18,20 +18,19 @@ class Token:
         pass
 
     @classmethod
-    def create_token(
-        cls,
-        username: str,
-        token_expiration_time: timedelta
-    ) -> str:
+    def create_token(cls, username: str, token_expiration_time: timedelta) -> str:
         expiration_date = datetime.now() + token_expiration_time
         data = {"sub": username, "exp": expiration_date}
-        encoded_jwt = jwt.encode(payload=data, key=settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM)
+        encoded_jwt = jwt.encode(
+            payload=data, key=settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM
+        )
         return encoded_jwt
 
     @classmethod
-    def get_token(cls, username: str, token_expiration_time: timedelta = timedelta(minutes=10)) -> PublicToken:
+    def get_token(
+        cls, username: str, token_expiration_time: timedelta = timedelta(minutes=10)
+    ) -> PublicToken:
         token_content = cls.create_token(
-            username=username,
-            token_expiration_time=token_expiration_time
+            username=username, token_expiration_time=token_expiration_time
         )
         return PublicToken(access_token=token_content, token_type=TokenType.BEARER)

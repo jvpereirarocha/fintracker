@@ -8,13 +8,7 @@ from sqlalchemy import String
 from sqlalchemy import Float
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import (
-    registry,
-    Mapped,
-    mapped_column,
-    sessionmaker,
-    relationship
-)
+from sqlalchemy.orm import registry, Mapped, mapped_column, sessionmaker, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
 from app.config import Settings
 
@@ -24,9 +18,11 @@ mapped_registry = registry()
 
 @mapped_registry.mapped_as_dataclass
 class User:
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
-    user_id: Mapped[int] = mapped_column(init=False, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        init=False, primary_key=True, autoincrement=True
+    )
     username: Mapped[str] = mapped_column(unique=True)
     password_hash: Mapped[bytes] = mapped_column(LargeBinary(60))
     password_salt: Mapped[bytes] = mapped_column(LargeBinary(29))
@@ -37,13 +33,15 @@ class User:
     transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
 
     __table_args__ = (
-        Index('user_email_pass_idx', 'username', 'email', 'password_hash', 'password_salt'),
-        Index('email_pass_idx', 'email', 'password_hash', 'password_salt'),
-        Index('user_pass_idx', 'username', 'password_hash', 'password_salt'),
-        Index('user_created_at_idx', 'username', 'created_at'),
-        Index('email_created_at_idx', 'email', 'created_at'),
-        Index('user_updated_at_idx', 'username', 'updated_at'),
-        Index('email_updated_at_idx', 'email', 'updated_at'),
+        Index(
+            "user_email_pass_idx", "username", "email", "password_hash", "password_salt"
+        ),
+        Index("email_pass_idx", "email", "password_hash", "password_salt"),
+        Index("user_pass_idx", "username", "password_hash", "password_salt"),
+        Index("user_created_at_idx", "username", "created_at"),
+        Index("email_created_at_idx", "email", "created_at"),
+        Index("user_updated_at_idx", "username", "updated_at"),
+        Index("email_updated_at_idx", "email", "updated_at"),
     )
 
 
@@ -54,29 +52,27 @@ class TypeTransaction(Enum):
 
 @mapped_registry.mapped_as_dataclass
 class Transaction:
-    __tablename__ = 'transactions'
+    __tablename__ = "transactions"
 
     transaction_id: Mapped[int] = mapped_column(init=False, primary_key=True)
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Float(asdecimal=True), nullable=False)
-    type_of_transaction: Mapped[TypeTransaction] = mapped_column(
-        String(20)
-    )
+    type_of_transaction: Mapped[TypeTransaction] = mapped_column(String(20))
     registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
 
     user: Mapped["User"] = relationship(back_populates="transactions")
 
     __table_args__ = (
-        Index('desc_amount_idx', 'description', 'amount'),
-        Index('desc_amount_userid_idx', 'description', 'amount', 'user_id'),
-        Index('amount_type_of_transaction_idx', 'amount', 'type_of_transaction'),
-        Index('type_of_transaction_date_idx', 'type_of_transaction', 'registration_date'),
+        Index("desc_amount_idx", "description", "amount"),
+        Index("desc_amount_userid_idx", "description", "amount", "user_id"),
+        Index("amount_type_of_transaction_idx", "amount", "type_of_transaction"),
+        Index(
+            "type_of_transaction_date_idx", "type_of_transaction", "registration_date"
+        ),
     )
 
 
-engine = sqlalchemy.create_engine(
-    url=Settings().DATABASE_URL # type: ignore
-)
+engine = sqlalchemy.create_engine(url=Settings().DATABASE_URL)  # type: ignore
 
 Session = sessionmaker(engine)

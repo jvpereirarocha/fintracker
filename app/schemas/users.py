@@ -6,9 +6,9 @@ class CreateUser(BaseModel):
     username: str
     email: EmailStr
     password: str
-    confirm_password: str = Field(alias='confirmPassword')
+    confirm_password: str = Field(alias="confirmPassword")
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_password(self) -> Self:
         if self.password != self.confirm_password:
             raise ValueError("Passwords don't match")

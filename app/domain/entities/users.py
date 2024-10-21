@@ -15,19 +15,19 @@ class UserEntity:
 
     @classmethod
     def _change_password_to_bytes(cls, password: str) -> bytes:
-        return password.encode('utf-8')
+        return password.encode("utf-8")
 
     @classmethod
-    def _get_hash_and_salt_password(cls, password_as_bytes: bytes) -> tuple[bytes, bytes]:
+    def _get_hash_and_salt_password(
+        cls, password_as_bytes: bytes
+    ) -> tuple[bytes, bytes]:
         salt = bcrypt.gensalt()
         generated_hash = bcrypt.hashpw(password_as_bytes, salt=salt)
         return generated_hash, salt
 
     @classmethod
     def encrypted_password(cls, password: str) -> tuple[bytes, bytes]:
-        password_bytes: bytes = cls._change_password_to_bytes(
-            password=password
-        )
+        password_bytes: bytes = cls._change_password_to_bytes(password=password)
         password_hash, password_salt = cls._get_hash_and_salt_password(
             password_as_bytes=password_bytes
         )
@@ -36,8 +36,7 @@ class UserEntity:
     @classmethod
     def verify_password(cls, plain_text_password: str, password_hash: bytes) -> bool:
         return bcrypt.checkpw(
-            password=plain_text_password.encode('utf-8'),
-            hashed_password=password_hash
+            password=plain_text_password.encode("utf-8"), hashed_password=password_hash
         )
 
     @classmethod

@@ -12,12 +12,10 @@ from app.schemas.users import CreateUser, UserPublic, LoginUser
 from app.schemas.auth import PublicToken
 
 
-users_router = APIRouter(
-    prefix="/users",
-    dependencies=[Depends(get_session)]
-)
+users_router = APIRouter(prefix="/users", dependencies=[Depends(get_session)])
 
-settings = Settings() # type: ignore
+settings = Settings()  # type: ignore
+
 
 @users_router.post(
     "/",
@@ -28,42 +26,32 @@ async def create_user(user_schema: CreateUser):
     session = await get_session()
     user_already_exists = session.scalar(
         select(User).where(
-            (User.email == user_schema.email)
-            |
-            (User.username == user_schema.username)
+            (User.email == user_schema.email) | (User.username == user_schema.username)
         )
     )
     if user_already_exists:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="User already exists"
+            status_code=HTTPStatus.BAD_REQUEST, detail="User already exists"
         )
-    user_entity = UserEntity.new_user(
-        user_schema=user_schema
-    )
+    user_entity = UserEntity.new_user(user_schema=user_schema)
     db_user = User(
         email=user_entity.email,
         password_hash=user_entity.password_hash,
         password_salt=user_entity.password_salt,
         username=user_entity.username,
         transactions=[],
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
     session.add(db_user)
     session.commit()
-    user_public = UserPublic(
-        username=db_user.username,
-        email=db_user.email
-    )
+    user_public = UserPublic(username=db_user.username, email=db_user.email)
     return user_public
 
 
 @users_router.get("/", response_model=list[UserPublic], status_code=HTTPStatus.OK)
 async def get_users():
     session = await get_session()
-    all_users = session.scalars(
-        select(User.email, User.username)
-    )
+    all_users = session.scalars(select(User.email, User.username))
     if not all_users:
         return []
 
@@ -81,13 +69,10 @@ async def get_users():
 @users_router.post("/login", response_model=PublicToken, status_code=HTTPStatus.OK)
 async def login(user: LoginUser) -> PublicToken:
     session = await get_session()
-    db_user = session.scalar(
-        select(User).where((User.username == user.username))
-    )
+    db_user = session.scalar(select(User).where((User.username == user.username)))
     if not db_user:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="User doesn't exist"
+            status_code=HTTPStatus.BAD_REQUEST, detail="User doesn't exist"
         )
 
     user_authenticated = UserEntity.verify_password(
@@ -97,13 +82,11 @@ async def login(user: LoginUser) -> PublicToken:
 
     if not user_authenticated:
         raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Invalid user credentials"
+            status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid user credentials"
         )
 
     access_token = Token.create_token(
-        username=user.username,
-        token_expiration_time=timedelta(minutes=30)
+        username=user.username, token_expiration_time=timedelta(minutes=30)
     )
     return PublicToken(access_token=access_token, token_type=settings.TOKEN_TYPE)
 
