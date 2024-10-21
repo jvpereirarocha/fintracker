@@ -1,7 +1,4 @@
-echo "Exporting environment variables..."
-export $(grep -v '^#' .env | xargs)
-
-echo "Now, let's run the migrations"
+echo "First of all, let's run the migrations"
 alembic upgrade head
 
 echo "Latest, we will run the server"

@@ -1,0 +1,41 @@
+services:
+  web:
+    container_name: fintracker-api
+    build:
+      context: .
+    volumes:
+      - .:/app
+    ports:
+      - 8008:8000
+    networks:
+      - fintracker-network
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+  db:
+    image: postgres:15-alpine
+    container_name: dbfinanc-api
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      start_period: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - fintracker-network
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+
+networks:
+  fintracker-network:
+    name: netfintracker
