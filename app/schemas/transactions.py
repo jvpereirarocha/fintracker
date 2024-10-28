@@ -28,3 +28,8 @@ class PaginatedTransactions(BaseModel):
     prev: int | None
     next_page: int | None = Field(alias="next")
     items: list[TransactionResponse]
+
+
+class CreatedOrUpdatedTransaction(BaseModel):
+    message: str
+    is_update: bool
