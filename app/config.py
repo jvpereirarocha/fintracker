@@ -12,3 +12,5 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     ALGORITHM: str
     TOKEN_TYPE: str
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_ACCESS_KEY: str

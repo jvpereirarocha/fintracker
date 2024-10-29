@@ -5,3 +5,5 @@ POSTGRES_DB=dbname
 JWT_SECRET_KEY=your_secret_jwt_key
 ALGORITHM=your_algorithm
 TOKEN_TYPE=type_of_token
+AWS_ACCESS_KEY='your_access_key'
+AWS_SECRET_ACCESS_KEY='secret_access_key'
