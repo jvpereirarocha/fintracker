@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from app.config import Settings
 import jwt
 from app.schemas.auth import PublicToken
+import pytz
 
 
 settings = Settings()  # type: ignore
@@ -19,8 +20,8 @@ class Token:
 
     @classmethod
     def create_token(cls, username: str, token_expiration_time: timedelta) -> str:
-        expiration_date = datetime.now() + token_expiration_time
-        data = {"sub": username, "exp": expiration_date}
+        expiration_date = datetime.now(tz=pytz.UTC) + token_expiration_time
+        data = {"sub": username, "name": f"{username}'s token", "exp": expiration_date, "iat": datetime.now(tz=pytz.UTC)}
         encoded_jwt = jwt.encode(
             payload=data, key=settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM
         )
