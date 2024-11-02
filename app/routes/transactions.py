@@ -51,7 +51,7 @@ async def get_all_transactions(
     previous: Annotated[int | None, Query(alias="prev")] = None,
     next_page: Annotated[int | None, Query(alias="next")] = None,
 ):
-    current_user = await get_current_user(request=request)
+    current_user = request.state.user
     session = await get_session()
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
