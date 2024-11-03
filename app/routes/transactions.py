@@ -1,14 +1,18 @@
 from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.config import Settings
 from app.database import Transaction, User
 from app.dependencies import get_current_user, get_session
-from app.schemas.transactions import PaginatedTransactions, TransactionResponse
-
+from app.schemas.transactions import (
+    PaginatedTransactions,
+    TransactionResponse,
+    PersistTransaction,
+    NonRequiredPersistTransaction,
+    DeletedTransaction,
+)
 
 transactions_router = APIRouter(
     prefix="/transactions",
@@ -43,7 +47,11 @@ def get_next_page(current_page: int, total_of_pages: int) -> int | None:
     return None
 
 
-@transactions_router.get("/", response_model=PaginatedTransactions)
+@transactions_router.get(
+    path="/",
+    response_model=PaginatedTransactions,
+    status_code=HTTPStatus.OK,
+)
 async def get_all_transactions(
     request: Request,
     items_per_page: Annotated[int | None, Query(alias="itemsPerPage")] = None,
@@ -112,3 +120,189 @@ async def get_all_transactions(
         next=next_page,
         items=list_of_transactions_to_response_model,
     )
+
+
+@transactions_router.get(
+    path="/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.OK,
+)
+async def detail_transaction(
+    request: Request,
+    transaction_id: int,
+):
+    current_user = request.state.user
+    session = await get_session()
+    db_user = session.scalar(select(User).where((User.username == current_user.sub)))
+    if not db_user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+
+    transaction = session.scalar(
+        select(Transaction).where(
+            (Transaction.transaction_id == transaction_id)
+            & (Transaction.user_id == db_user.user_id)
+        )
+    )
+    if not transaction:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+        )
+
+    return TransactionResponse(
+        description=transaction.description,
+        amount=TransactionResponse.format_to_currency(amount=transaction.amount),
+        registration_date=TransactionResponse.format_date(
+            date_reference=transaction.registration_date
+        ),
+    )
+
+
+@transactions_router.post(
+    path="/",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.CREATED,
+)
+async def create_transaction(request: Request, transaction_dto: PersistTransaction):
+    current_user = request.state.user
+    session = await get_session()
+    db_user = session.scalar(select(User).where((User.username == current_user.sub)))
+    if not db_user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+
+    transaction = Transaction(
+        description=transaction_dto.description,
+        amount=transaction_dto.amount,
+        type_of_transaction=transaction_dto.type_of_transaction,
+        registration_date=transaction_dto.registration_date,
+        user_id=db_user.user_id,
+    )
+    session.add(transaction)
+    session.commit()
+
+    return TransactionResponse(
+        description=transaction.description,
+        amount=TransactionResponse.format_to_currency(amount=transaction.amount),
+        registration_date=TransactionResponse.format_date(
+            date_reference=transaction.registration_date
+        ),
+    )
+
+
+@transactions_router.put(
+    path="/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.OK,
+)
+async def update_transaction(
+    request: Request, transaction_id: int, transaction_dto: PersistTransaction
+):
+    current_user = request.state.user
+    session = await get_session()
+    db_user = session.scalar(select(User).where((User.username == current_user.sub)))
+    if not db_user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+
+    transaction = session.scalar(
+        select(Transaction).where(
+            (Transaction.transaction_id == transaction_id)
+            & (Transaction.user_id == db_user.user_id)
+        )
+    )
+    if not transaction:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+        )
+
+    transaction.description = transaction_dto.description
+    transaction.amount = transaction_dto.amount
+    transaction.type_of_transaction = transaction_dto.type_of_transaction
+    transaction.registration_date = transaction_dto.registration_date
+
+    session.add(transaction)
+    session.commit()
+
+    return TransactionResponse(
+        description=transaction.description,
+        amount=TransactionResponse.format_to_currency(amount=transaction.amount),
+        registration_date=TransactionResponse.format_date(
+            date_reference=transaction.registration_date
+        ),
+    )
+
+
+@transactions_router.patch(
+    path="/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.OK,
+)
+async def partial_update_transaction(
+    request: Request,
+    transaction_id: int,
+    transaction_dto: NonRequiredPersistTransaction,
+):
+    current_user = request.state.user
+    session = await get_session()
+    db_user = session.scalar(select(User).where((User.username == current_user.sub)))
+    if not db_user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+
+    transaction = session.scalar(
+        select(Transaction).where(
+            (Transaction.transaction_id == transaction_id)
+            & (Transaction.user_id == db_user.user_id)
+        )
+    )
+    if not transaction:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+        )
+
+    transaction.description = transaction_dto.description or transaction.description
+    transaction.amount = transaction_dto.amount or transaction.amount
+    transaction.type_of_transaction = (
+        transaction_dto.type_of_transaction or transaction.type_of_transaction
+    )
+    transaction.registration_date = (
+        transaction_dto.registration_date or transaction.registration_date
+    )
+
+    session.add(transaction)
+    session.commit()
+
+    return TransactionResponse(
+        description=transaction.description,
+        amount=TransactionResponse.format_to_currency(amount=transaction.amount),
+        registration_date=TransactionResponse.format_date(
+            date_reference=transaction.registration_date
+        ),
+    )
+
+
+@transactions_router.delete(
+    "/{transaction_id}", response_model=TransactionResponse, status_code=HTTPStatus.OK
+)
+async def delete_transaction(
+    request: Request,
+    transaction_id: int,
+):
+    current_user = request.state.user
+    session = await get_session()
+    db_user = session.scalar(select(User).where((User.username == current_user.sub)))
+    if not db_user:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+
+    transaction = session.scalar(
+        select(Transaction).where(
+            (Transaction.transaction_id == transaction_id)
+            & (Transaction.user_id == db_user.user_id)
+        )
+    )
+    if not transaction:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+        )
+
+    session.delete(transaction)
+    session.commit()
+
+    return DeletedTransaction(message="Transaction was deleted successfully")
