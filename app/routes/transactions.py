@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.config import Settings
 from app.database import Transaction, User
 from app.dependencies import get_current_user, get_session
+from app.domain.entities.transactions import TransactionEntity
 from app.schemas.transactions import (
     PaginatedTransactions,
     TransactionResponse,
@@ -106,7 +107,8 @@ async def get_all_transactions(
         transaction_from_response = TransactionResponse(
             description=transaction.description,
             amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-            registration_date=TransactionResponse.format_date(
+            typeOfTransaction=transaction.type_of_transaction,
+            registrationDate=TransactionResponse.format_registration_date(
                 date_reference=transaction.registration_date
             ),
         )
@@ -151,7 +153,8 @@ async def detail_transaction(
     return TransactionResponse(
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-        registration_date=TransactionResponse.format_date(
+        typeOfTransaction=transaction.type_of_transaction.value,
+        registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
         ),
     )
@@ -171,10 +174,11 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
 
     transaction = Transaction(
         description=transaction_dto.description,
-        amount=transaction_dto.amount,
+        amount=TransactionEntity.brl_to_decimal(transaction_dto.amount),
         type_of_transaction=transaction_dto.type_of_transaction,
-        registration_date=transaction_dto.registration_date,
+        registration_date=TransactionEntity.string_date_to_datetime(transaction_dto.registration_date),
         user_id=db_user.user_id,
+        user=db_user,
     )
     session.add(transaction)
     session.commit()
@@ -182,7 +186,8 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
     return TransactionResponse(
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-        registration_date=TransactionResponse.format_date(
+        typeOfTransaction=transaction.type_of_transaction,
+        registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
         ),
     )
@@ -214,9 +219,9 @@ async def update_transaction(
         )
 
     transaction.description = transaction_dto.description
-    transaction.amount = transaction_dto.amount
+    transaction.amount = TransactionEntity.brl_to_decimal(transaction_dto.amount)
     transaction.type_of_transaction = transaction_dto.type_of_transaction
-    transaction.registration_date = transaction_dto.registration_date
+    transaction.registration_date = TransactionEntity.string_date_to_datetime(transaction_dto.registration_date)
 
     session.add(transaction)
     session.commit()
@@ -224,9 +229,11 @@ async def update_transaction(
     return TransactionResponse(
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-        registration_date=TransactionResponse.format_date(
+        typeOfTransaction=transaction.type_of_transaction,
+        registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
         ),
+        user=db_user,
     )
 
 
@@ -258,12 +265,12 @@ async def partial_update_transaction(
         )
 
     transaction.description = transaction_dto.description or transaction.description
-    transaction.amount = transaction_dto.amount or transaction.amount
+    transaction.amount = TransactionEntity.brl_to_decimal(transaction_dto.amount) or transaction.amount
     transaction.type_of_transaction = (
         transaction_dto.type_of_transaction or transaction.type_of_transaction
     )
     transaction.registration_date = (
-        transaction_dto.registration_date or transaction.registration_date
+        TransactionEntity.string_date_to_datetime(transaction_dto.registration_date) or transaction.registration_date
     )
 
     session.add(transaction)
@@ -272,9 +279,11 @@ async def partial_update_transaction(
     return TransactionResponse(
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-        registration_date=TransactionResponse.format_date(
+        typeOfTransaction=transaction.type_of_transaction,
+        registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
         ),
+        user=db_user,
     )
 
 
