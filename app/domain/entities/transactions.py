@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -46,3 +47,13 @@ class TransactionEntity:
             registration_date=datetime.now(),
             user_id=user_id,
         )
+
+    @classmethod
+    def brl_to_decimal(cls, brl_string: str) -> Decimal:
+        # Remove the "R$" symbol and any spaces, then replace the comma with a dot
+        sanitized_str = re.sub(r"[^\d,]", "", brl_string).replace(",", ".")
+        return Decimal(sanitized_str)
+
+    @classmethod
+    def string_date_to_datetime(cls, string_date: str) -> datetime:
+        return datetime.strptime(string_date, "%d/%m/%Y")
