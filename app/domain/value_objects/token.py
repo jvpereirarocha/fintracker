@@ -21,7 +21,12 @@ class Token:
     @classmethod
     def create_token(cls, username: str, token_expiration_time: timedelta) -> str:
         expiration_date = datetime.now(tz=pytz.UTC) + token_expiration_time
-        data = {"sub": username, "name": f"{username}'s token", "exp": expiration_date, "iat": datetime.now(tz=pytz.UTC)}
+        data = {
+            "sub": username,
+            "name": f"{username}'s token",
+            "exp": expiration_date,
+            "iat": datetime.now(tz=pytz.UTC),
+        }
         encoded_jwt = jwt.encode(
             payload=data, key=settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM
         )
