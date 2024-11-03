@@ -1,5 +1,7 @@
 from decimal import Decimal
 import locale
+from typing import Literal
+
 from pydantic import BaseModel, Field
 from app.config import Settings
 from datetime import date, datetime
@@ -17,7 +19,7 @@ class TransactionResponse(BaseModel):
         return currency_format
 
     @classmethod
-    def format_date(cls, date_reference: datetime) -> str:
+    def format_date(cls, date_reference: datetime | date) -> str:
         return datetime.strftime(date_reference, format="%d/%m/%Y")
 
 
@@ -30,6 +32,19 @@ class PaginatedTransactions(BaseModel):
     items: list[TransactionResponse]
 
 
-class CreatedOrUpdatedTransaction(BaseModel):
+class PersistTransaction(BaseModel):
+    description: str
+    amount: Decimal
+    type_of_transaction: Literal["income", "expense"]
+    registration_date: date = Field(alias="registrationDate")
+
+
+class NonRequiredPersistTransaction(BaseModel):
+    description: str | None = None
+    amount: Decimal | None = None
+    type_of_transaction: Literal["income", "expense"] | None = None
+    registration_date: date | None = Field(alias="registrationDate", default=None)
+
+
+class DeletedTransaction(BaseModel):
     message: str
-    is_update: bool
