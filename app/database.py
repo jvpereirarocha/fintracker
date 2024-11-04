@@ -6,9 +6,16 @@ from sqlalchemy import func
 from sqlalchemy import Index
 from sqlalchemy import String
 from sqlalchemy import Float
-from sqlalchemy import DateTime
+from sqlalchemy import Date
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import registry, Mapped, mapped_column, sessionmaker, relationship
+from sqlalchemy.orm import (
+    registry,
+    Mapped,
+    mapped_column,
+    sessionmaker,
+    relationship,
+    validates,
+)
 from sqlalchemy.sql.sqltypes import LargeBinary
 from app.config import Settings
 
@@ -58,10 +65,25 @@ class Transaction:
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Float(asdecimal=True), nullable=False)
     type_of_transaction: Mapped[TypeTransaction] = mapped_column(String(20))
-    registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    registration_date: Mapped[datetime] = mapped_column(Date, nullable=True)
+    due_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
 
     user: Mapped["User"] = relationship(back_populates="transactions")
+
+    @validates("due_date")
+    def validate_due_date(self, key, value):
+        if value and value < self.registration_date:
+            raise ValueError(
+                "A data de vencimento deve ser maior que a data de registro"
+            )
+        if (
+            self.type_of_transaction
+            and self.type_of_transaction == TypeTransaction.EXPENSE
+            and not self.due_date
+        ):
+            raise ValueError("A data de vencimento deve ser informada para despesas")
+        return value
 
     __table_args__ = (
         Index("desc_amount_idx", "description", "amount"),
@@ -69,6 +91,17 @@ class Transaction:
         Index("amount_type_of_transaction_idx", "amount", "type_of_transaction"),
         Index(
             "type_of_transaction_date_idx", "type_of_transaction", "registration_date"
+        ),
+        Index(
+            "description_expense_due_date_idx",
+            "description",
+            "type_of_transaction",
+            "due_date",
+            postgresql_where=(
+                type_of_transaction == TypeTransaction.EXPENSE.value
+                and due_date != None
+            ),
+            unique=True,
         ),
     )
 
