@@ -1,6 +1,7 @@
+import locale
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
 from typing import Literal, Self
@@ -55,5 +56,19 @@ class TransactionEntity:
         return Decimal(sanitized_str)
 
     @classmethod
-    def string_date_to_datetime(cls, string_date: str) -> datetime:
-        return datetime.strptime(string_date, "%d/%m/%Y")
+    def format_to_currency(cls, amount: Decimal) -> str:
+        locale.setlocale(locale.LC_ALL, "pt_BR.utf-8")
+        currency_format = locale.currency(val=amount)
+        return currency_format
+
+    @classmethod
+    def string_date_to_datetime(cls, string_date: str = "") -> date | None:
+        if string_date:
+            return datetime.strptime(string_date, "%d/%m/%Y").date()
+        return None
+
+    @classmethod
+    def date_to_string(cls, date_reference: datetime | date | None = None) -> str:
+        if date_reference:
+            return datetime.strftime(date_reference, format="%d/%m/%Y")
+        return ""

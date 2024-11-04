@@ -12,7 +12,6 @@ from app.schemas.transactions import (
     TransactionResponse,
     PersistTransaction,
     NonRequiredPersistTransaction,
-    DeletedTransaction,
 )
 
 transactions_router = APIRouter(
@@ -105,11 +104,15 @@ async def get_all_transactions(
     list_of_transactions_to_response_model = []
     for transaction in transactions:
         transaction_from_response = TransactionResponse(
+            id=transaction.transaction_id,
             description=transaction.description,
             amount=TransactionResponse.format_to_currency(amount=transaction.amount),
             typeOfTransaction=transaction.type_of_transaction,
             registrationDate=TransactionResponse.format_registration_date(
                 date_reference=transaction.registration_date
+            ),
+            dueDate=TransactionResponse.format_due_date(
+                date_reference=transaction.due_date
             ),
         )
         list_of_transactions_to_response_model.append(transaction_from_response)
@@ -147,15 +150,19 @@ async def detail_transaction(
     )
     if not transaction:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+            status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
 
     return TransactionResponse(
+        id=transaction.transaction_id,
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
-        typeOfTransaction=transaction.type_of_transaction.value,
+        typeOfTransaction=transaction.type_of_transaction,
         registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
+        ),
+        dueDate=TransactionResponse.format_due_date(
+            date_reference=transaction.due_date
         ),
     )
 
@@ -176,7 +183,10 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
         description=transaction_dto.description,
         amount=TransactionEntity.brl_to_decimal(transaction_dto.amount),
         type_of_transaction=transaction_dto.type_of_transaction,
-        registration_date=TransactionEntity.string_date_to_datetime(transaction_dto.registration_date),
+        registration_date=TransactionEntity.string_date_to_datetime(
+            transaction_dto.registration_date
+        ),
+        due_date=TransactionEntity.string_date_to_datetime(transaction_dto.due_date),
         user_id=db_user.user_id,
         user=db_user,
     )
@@ -184,11 +194,15 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
     session.commit()
 
     return TransactionResponse(
+        id=transaction.transaction_id,
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
         typeOfTransaction=transaction.type_of_transaction,
         registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
+        ),
+        dueDate=TransactionResponse.format_due_date(
+            date_reference=transaction.due_date
         ),
     )
 
@@ -215,23 +229,32 @@ async def update_transaction(
     )
     if not transaction:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+            status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
 
     transaction.description = transaction_dto.description
     transaction.amount = TransactionEntity.brl_to_decimal(transaction_dto.amount)
     transaction.type_of_transaction = transaction_dto.type_of_transaction
-    transaction.registration_date = TransactionEntity.string_date_to_datetime(transaction_dto.registration_date)
+    transaction.registration_date = TransactionEntity.string_date_to_datetime(
+        transaction_dto.registration_date
+    )
+    transaction.due_date = TransactionEntity.string_date_to_datetime(
+        transaction_dto.due_date
+    )
 
     session.add(transaction)
     session.commit()
 
     return TransactionResponse(
+        id=transaction.transaction_id,
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
         typeOfTransaction=transaction.type_of_transaction,
         registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
+        ),
+        dueDate=TransactionResponse.format_due_date(
+            date_reference=transaction.due_date
         ),
         user=db_user,
     )
@@ -261,35 +284,53 @@ async def partial_update_transaction(
     )
     if not transaction:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+            status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
 
-    transaction.description = transaction_dto.description or transaction.description
-    transaction.amount = TransactionEntity.brl_to_decimal(transaction_dto.amount) or transaction.amount
-    transaction.type_of_transaction = (
+    description = transaction_dto.description or transaction.description
+    amount = transaction_dto.amount or TransactionEntity.format_to_currency(
+        amount=transaction.amount
+    )
+    type_of_transaction = (
         transaction_dto.type_of_transaction or transaction.type_of_transaction
     )
-    transaction.registration_date = (
-        TransactionEntity.string_date_to_datetime(transaction_dto.registration_date) or transaction.registration_date
+    registration_date = (
+        transaction_dto.registration_date
+        or TransactionEntity.date_to_string(
+            date_reference=transaction.registration_date
+        )
     )
+    due_date = transaction_dto.due_date or TransactionEntity.date_to_string(
+        date_reference=transaction.due_date
+    )
+
+    transaction.description = description
+    transaction.amount = TransactionEntity.brl_to_decimal(amount)
+    transaction.type_of_transaction = type_of_transaction
+    transaction.registration_date = TransactionEntity.string_date_to_datetime(
+        registration_date
+    )
+    transaction.due_date = TransactionEntity.string_date_to_datetime(due_date)
 
     session.add(transaction)
     session.commit()
 
     return TransactionResponse(
+        id=transaction.transaction_id,
         description=transaction.description,
         amount=TransactionResponse.format_to_currency(amount=transaction.amount),
         typeOfTransaction=transaction.type_of_transaction,
         registrationDate=TransactionResponse.format_registration_date(
             date_reference=transaction.registration_date
         ),
+        dueDate=TransactionResponse.format_due_date(
+            date_reference=transaction.due_date
+        ),
         user=db_user,
     )
 
 
-@transactions_router.delete(
-    "/{transaction_id}", response_model=TransactionResponse, status_code=HTTPStatus.OK
-)
+@transactions_router.delete("/{transaction_id}", status_code=HTTPStatus.NO_CONTENT)
 async def delete_transaction(
     request: Request,
     transaction_id: int,
@@ -308,10 +349,10 @@ async def delete_transaction(
     )
     if not transaction:
         raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail="Transaction not found"
+            status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
 
     session.delete(transaction)
     session.commit()
 
-    return DeletedTransaction(message="Transaction was deleted successfully")
+    return {}
