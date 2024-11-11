@@ -2,11 +2,12 @@ from dataclasses import dataclass, field
 from typing import Self
 import bcrypt
 
+from app.domain.entities.base import BaseEntity
 from app.schemas.users import CreateUser
 
 
 @dataclass
-class UserEntity:
+class UserEntity(BaseEntity):
     user_id: int = field(init=False)
     username: str
     email: str

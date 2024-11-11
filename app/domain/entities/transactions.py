@@ -6,6 +6,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Literal, Self
 
+from app.domain.entities.base import BaseEntity
+
 
 class TypeTransaction(Enum):
     INCOME = "income"
@@ -13,7 +15,7 @@ class TypeTransaction(Enum):
 
 
 @dataclass()
-class TransactionEntity:
+class TransactionEntity(BaseEntity):
     transaction_id: int = field(init=False)
     description: str
     amount: Decimal
