@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PublicToken(BaseModel):
-    access_token: str
-    token_type: str
+    access_token: str = Field(..., alias="accessToken")
+    token_type: str = Field(..., alias="tokenType")
 
 
 class JWTPayload(BaseModel):

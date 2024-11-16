@@ -18,7 +18,7 @@ settings = Settings()  # type: ignore
 
 
 @users_router.post(
-    "/",
+    "/register",
     response_model=UserPublic,
     status_code=HTTPStatus.CREATED,
 )
@@ -88,7 +88,7 @@ async def login(user: LoginUser) -> PublicToken:
     access_token = Token.create_token(
         username=user.username, token_expiration_time=timedelta(minutes=30)
     )
-    return PublicToken(access_token=access_token, token_type=settings.TOKEN_TYPE)
+    return PublicToken(accessToken=access_token, tokenType=settings.TOKEN_TYPE)
 
 
 @users_router.get(
