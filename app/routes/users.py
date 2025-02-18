@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
 from app.config import Settings
@@ -51,7 +53,9 @@ async def create_user(user_schema: CreateUser):
 @users_router.get("/", response_model=list[UserPublic], status_code=HTTPStatus.OK)
 async def get_users():
     session = await get_session()
-    all_users = session.scalars(select(User.email, User.username))
+    statement = select(User.email.label("email"), User.username.label("username"))
+    query = session.execute(statement=statement)
+    all_users = query.all()
     if not all_users:
         return []
 

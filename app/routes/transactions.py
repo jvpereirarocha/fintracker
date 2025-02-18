@@ -78,7 +78,7 @@ async def get_all_transactions(
     limit = query_params.get("itemsPerPage") or 10
     offset = calculate_offset(
         page=query_params.get("page") or 1,
-        items_per_page=query_params.get("itemsPerPage") or 10,
+        items_per_page=limit,
     )
 
     transactions = session.scalars(
@@ -118,8 +118,8 @@ async def get_all_transactions(
         list_of_transactions_to_response_model.append(transaction_from_response)
 
     return PaginatedTransactions(
-        items_per_page=limit,
-        total_of_pages=total_of_pages,
+        itemsPerPage=limit,
+        totalOfPages=total_of_pages,
         page=query_params.get("page") or 1,
         prev=previous_page,
         next=next_page,
