@@ -34,8 +34,8 @@ class TransactionResponse(BaseModel):
 
 
 class PaginatedTransactions(BaseModel):
-    total_of_pages: int = Field("totalOfPages")
-    items_per_page: int = Field("itemsPerPage")
+    total_of_pages: int = Field(alias="totalOfPages")
+    items_per_page: int = Field(alias="itemsPerPage")
     page: int | None
     prev: int | None
     next_page: int | None = Field(alias="next")
