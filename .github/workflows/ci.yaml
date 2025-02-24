@@ -7,22 +7,45 @@ on:
   pull_request:
     types: [closed]
 
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: fintracker
+  DOCKER_IMAGE_NAME: fintrackapi
+  DOCKER_IMAGE_TAG: latest
+
 jobs:
-  deploy:
-    runs-on: self-hosted
+  build-image:
+    runs-on: ubuntu-latest
     steps:
       # 1 code checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2 configure aws
+      # 2 configure AWS
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: us-east-2
+          aws-region: ${{ env.AWS_REGION }}
 
-      # 3 aws command
-      - name: AWS S3 ls
-        run: aws s3 ls
+      # 3 login to AWS ECR
+      - name: Login on AWS
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 4 Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }} .
+
+      # 5 Tag Docker image
+      - name: Tag Docker image
+        run: |
+          docker tag ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }} \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+
+      # 6 Push Docker image
+      - name: Push Docker image
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
