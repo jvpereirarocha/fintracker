@@ -104,6 +104,16 @@ class Transaction:
             ),
             unique=True,
         ),
+        Index(
+            "description_amount_type_category_idx",
+            "description",
+            "amount",
+            "type_of_transaction",
+            "category_id",
+            postgresql_where=(
+                category_id != None
+            )
+        )
     )
 
 
