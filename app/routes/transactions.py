@@ -1,10 +1,10 @@
 from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.config import Settings
-from app.database import Transaction, User
+from app.database import Category, Transaction, User
 from app.dependencies import get_current_user, get_session
 from app.domain.entities.transactions import TransactionEntity
 from app.schemas.transactions import (
@@ -114,6 +114,7 @@ async def get_all_transactions(
             dueDate=TransactionResponse.format_due_date(
                 date_reference=transaction.due_date
             ),
+            categoryId=transaction.category_id,
         )
         list_of_transactions_to_response_model.append(transaction_from_response)
 
@@ -164,6 +165,7 @@ async def detail_transaction(
         dueDate=TransactionResponse.format_due_date(
             date_reference=transaction.due_date
         ),
+        categoryId=transaction.category_id,
     )
 
 
@@ -178,6 +180,13 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
+    
+    category = session.scalar(
+        select(Category)
+        .where(func.lower(Category.name) == transaction_dto.category.lower())
+    )
+    if not category:
+        raise HTTPException(detail="The selected category doesn't exist", status_code=HTTPStatus.BAD_REQUEST)
 
     transaction = Transaction(
         description=transaction_dto.description,
@@ -189,6 +198,7 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
         due_date=TransactionEntity.string_date_to_datetime(transaction_dto.due_date),
         user_id=db_user.user_id,
         user=db_user,
+        category_id=category.category_id,
     )
     session.add(transaction)
     session.commit()
@@ -204,6 +214,7 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
         dueDate=TransactionResponse.format_due_date(
             date_reference=transaction.due_date
         ),
+        categoryId=transaction.category_id
     )
 
 
@@ -213,7 +224,7 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
     status_code=HTTPStatus.OK,
 )
 async def update_transaction(
-    request: Request, transaction_id: int, transaction_dto: PersistTransaction
+    request: Request, transaction_id: int, full_update_transaction_dto: PersistTransaction
 ):
     current_user = request.state.user
     session = await get_session()
@@ -231,19 +242,28 @@ async def update_transaction(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
+    
+    category = session.scalar(
+        select(Category)
+        .where(func.lower(Category.name) == full_update_transaction_dto.category.lower())
+    )
+    if not category:
+        raise HTTPException(detail="The selected category doesn't exist. You must created it before", status_code=HTTPStatus.BAD_REQUEST)
 
-    transaction.description = transaction_dto.description
-    transaction.amount = TransactionEntity.brl_to_decimal(transaction_dto.amount)
-    transaction.type_of_transaction = transaction_dto.type_of_transaction
+    transaction.description = full_update_transaction_dto.description
+    transaction.amount = TransactionEntity.brl_to_decimal(full_update_transaction_dto.amount)
+    transaction.type_of_transaction = full_update_transaction_dto.type_of_transaction
     transaction.registration_date = TransactionEntity.string_date_to_datetime(
-        transaction_dto.registration_date
+        full_update_transaction_dto.registration_date
     )
     transaction.due_date = TransactionEntity.string_date_to_datetime(
-        transaction_dto.due_date
+        full_update_transaction_dto.due_date
     )
+    transaction.category_id = category.category_id
 
     session.add(transaction)
     session.commit()
+    session.refresh()
 
     return TransactionResponse(
         id=transaction.transaction_id,
@@ -257,6 +277,7 @@ async def update_transaction(
             date_reference=transaction.due_date
         ),
         user=db_user,
+        categoryId=transaction.category_id
     )
 
 
@@ -268,7 +289,7 @@ async def update_transaction(
 async def partial_update_transaction(
     request: Request,
     transaction_id: int,
-    transaction_dto: NonRequiredPersistTransaction,
+    partial_update_transaction_dto: NonRequiredPersistTransaction,
 ):
     current_user = request.state.user
     session = await get_session()
@@ -287,20 +308,20 @@ async def partial_update_transaction(
             status_code=HTTPStatus.NOT_FOUND, detail="Transaction not found"
         )
 
-    description = transaction_dto.description or transaction.description
-    amount = transaction_dto.amount or TransactionEntity.format_to_currency(
+    description = partial_update_transaction_dto.description or transaction.description
+    amount = partial_update_transaction_dto.amount or TransactionEntity.format_to_currency(
         amount=transaction.amount
     )
     type_of_transaction = (
-        transaction_dto.type_of_transaction or transaction.type_of_transaction
+        partial_update_transaction_dto.type_of_transaction or transaction.type_of_transaction
     )
     registration_date = (
-        transaction_dto.registration_date
+        partial_update_transaction_dto.registration_date
         or TransactionEntity.date_to_string(
             date_reference=transaction.registration_date
         )
     )
-    due_date = transaction_dto.due_date or TransactionEntity.date_to_string(
+    due_date = partial_update_transaction_dto.due_date or TransactionEntity.date_to_string(
         date_reference=transaction.due_date
     )
 
@@ -311,6 +332,16 @@ async def partial_update_transaction(
         registration_date
     )
     transaction.due_date = TransactionEntity.string_date_to_datetime(due_date)
+
+    if partial_update_transaction_dto.category:
+        category = session.scalar(
+            select(Category)
+            .where(func.lower(Category.name) == partial_update_transaction_dto.category.lower())
+        )
+        if not category:
+            raise HTTPException(detail="The selected category doesn't exist. You must created it before", status_code=HTTPStatus.BAD_REQUEST)
+        
+        transaction.category_id = category.category_id
 
     session.add(transaction)
     session.commit()
@@ -327,6 +358,7 @@ async def partial_update_transaction(
             date_reference=transaction.due_date
         ),
         user=db_user,
+        categoryId=transaction.category_id
     )
 
 
