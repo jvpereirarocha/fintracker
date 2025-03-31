@@ -1,6 +1,6 @@
 from decimal import Decimal
 import locale
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
@@ -15,6 +15,7 @@ class TransactionResponse(BaseModel):
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
     registration_date: str = Field(alias="registrationDate", default="")
     due_date: str = Field(alias="dueDate", default="")
+    category_id: Optional[int] = Field(alias="categoryId", default=None)
 
     @classmethod
     def format_to_currency(cls, amount: Decimal) -> str:
@@ -48,6 +49,7 @@ class PersistTransaction(BaseModel):
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
     registration_date: str = Field(alias="registrationDate")
     due_date: str = Field(alias="dueDate", default="")
+    category: str = Field(alias="category")
 
     @field_validator("amount")
     @classmethod
@@ -93,6 +95,7 @@ class NonRequiredPersistTransaction(BaseModel):
     )
     registration_date: str | None = Field(alias="registrationDate", default=None)
     due_date: str | None = Field(alias="dueDate", default=None)
+    category: str | None = Field(alias="category", default=None)
 
     @field_validator("amount")
     @classmethod
