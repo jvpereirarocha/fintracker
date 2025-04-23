@@ -3,15 +3,18 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 WORKDIR /app
-COPY . .
+COPY requirements.txt .
+COPY entrypoint.sh .
 
 RUN pip install -r requirements.txt
 
+COPY . .
 RUN groupadd -r admin && useradd -r -g admin admin
 RUN chown -R admin:admin /app
 RUN chown -R admin:admin /app/app/migrations
 RUN chown admin:admin /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+
 
 RUN apt-get update \
     && apt-get install -y g++ gcc+ curl libpq-dev unixodbc unixodbc-dev \
