@@ -15,7 +15,7 @@ from app.schemas.dashboard import DashboardResponse
 
 
 dashboard_router = APIRouter(
-    prefix="/dashboard",
+    prefix="/dashboards",
     dependencies=[Depends(get_session), Depends(get_current_user)],
 )
 
