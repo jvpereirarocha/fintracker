@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -9,7 +10,7 @@ from app.schemas.categories import AllCategoriesResponse, CategorySchemaResponse
 
 
 category_router = APIRouter(
-    prefix="category/",
+    prefix="/categories",
     dependencies=[Depends(get_session), Depends(get_current_user)]
 )
 
@@ -24,18 +25,22 @@ async def create_new_category(request: Request, category_dto: NewCategorySchema)
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
-    
+
     category = session.scalar(
         select(Category)
         .where(Category.name == category_dto.name.lower())
     )
     if category:
         raise HTTPException(detail="The category already exists and cannot be persisted again!", status_code=HTTPStatus.BAD_REQUEST)
-    
-    new_category = Category(name=category_dto.name, description=category_dto.description)
+
+    new_category = Category(
+        name=category_dto.name,
+        description=category_dto.description,
+        updated_at=datetime.now()
+    )
     session.add(new_category)
     session.commit()
-    
+
     return NewCategoryResponse()
 
 
@@ -44,20 +49,20 @@ async def create_new_category(request: Request, category_dto: NewCategorySchema)
     response_model=CategorySchemaResponse,
     status_code=HTTPStatus.OK,
 )
-async def get_category(request: Request, category_id: int, update_category_dto: UpdateCategorySchema):
+async def get_category(request: Request, category_id: int):
     current_user = request.state.user
     session = await get_session()
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
-    
+
     category = session.scalar(
         select(Category)
         .where(Category.category_id == category_id)
     )
     if not category:
         raise HTTPException(detail="The category doesn't exist", status_code=HTTPStatus.NOT_FOUND)
-    
+
     return CategorySchemaResponse.model_validate(obj=category)
 
 
@@ -72,13 +77,13 @@ async def get_all_categories(request: Request):
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
-    
+
     categories = session.scalars(
         select(Category)
     )
     if not categories:
         raise HTTPException(detail="The category doesn't exist", status_code=HTTPStatus.NOT_FOUND)
-    
+
     return AllCategoriesResponse(
         results=[CategorySchemaResponse.model_validate(obj=category) for category in categories]
     )
@@ -95,7 +100,7 @@ async def update_category(request: Request, category_id: int, update_category_dt
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
-    
+
     category = session.scalar(
         select(Category)
         .where(Category.category_id == category_id)
@@ -103,7 +108,7 @@ async def update_category(request: Request, category_id: int, update_category_dt
     if not category:
         raise HTTPException(detail="The category doesn't exist", status_code=HTTPStatus.BAD_REQUEST)
 
-    
+
     updated_values_of_category = update_category_dto.model_dump(exclude_none=True, exclude_unset=True)
 
     for key, value in updated_values_of_category.items():
@@ -112,7 +117,6 @@ async def update_category(request: Request, category_id: int, update_category_dt
 
     session.add(category)
     session.commit()
-    session.refresh()
     return CategorySchemaResponse.model_validate(obj=category)
 
 
@@ -126,7 +130,7 @@ async def delete_category(request: Request, category_id: int):
     db_user = session.scalar(select(User).where((User.username == current_user.sub)))
     if not db_user:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="User not found")
-    
+
     category = session.scalar(
         select(Category)
         .where(Category.category_id == category_id)
