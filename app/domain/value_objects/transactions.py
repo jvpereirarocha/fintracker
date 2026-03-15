@@ -10,8 +10,9 @@ class TypeOfTransaction(StrEnum):
 
 @dataclass(frozen=True)
 class TransactionsFilter:
-    user_id: int
+    username: str
     month: Optional[int]
     year: Optional[int]
     description: Optional[str]
+    category: Optional[str]
     type_of_transaction: Optional[TypeOfTransaction]

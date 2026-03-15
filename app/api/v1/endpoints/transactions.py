@@ -25,6 +25,7 @@ async def get_all_transactions(
     month: Annotated[int | None, Query(alias="month")] = None,
     year: Annotated[int | None, Query(alias="year")] = None,
     description: Annotated[str | None, Query(alias="description")] = None,
+    category: Annotated[str | None, Query(alias="category")] = None,
     type_of_transaction: Annotated[str | None, Query(alias="typeOfTransaction")] = None,
     items_per_page: Annotated[int | None, Query(alias="itemsPerPage")] = None,
     page: Annotated[int | None, Query(alias="page")] = None,
@@ -33,10 +34,11 @@ async def get_all_transactions(
     current_user = request.state.user
 
     filters = TransactionsFilter(
-        user_id=current_user.sub,
+        username=current_user.sub,
         month=month,
         year=year,
         description=description,
+        category=category,
         type_of_transaction=type_of_transaction
     )
 
