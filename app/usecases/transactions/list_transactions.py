@@ -1,22 +1,28 @@
 from app.domain.abstractions.usecases import AbstractUseCase
-from app.domain.abstractions.repositories import AbstractTransactionRepository
+from app.domain.abstractions.repositories import AbstractTransactionRepository, AbstractUserRepository
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.domain.entities.base import PagedResponse
 from app.domain.entities.transactions import TransactionEntity
 
 
 class ListTransactionsUseCase(AbstractUseCase):
-    def __init__(self, repo: AbstractTransactionRepository):
-        self.repo = repo
+    def __init__(self, user_repo: AbstractUserRepository, transaction_repo: AbstractTransactionRepository):
+        self.user_repo = user_repo
+        self.transaction_repo = transaction_repo
 
-    def execute(
+    async def execute(
         self,
         filters: TransactionsFilter,
         page: int,
         page_size: int
     ) -> PagedResponse[TransactionEntity]:
         
-        items, total = self.repo.fetch_all(
+        user_id = self.user_repo.get_user_id_by_username(username=filters.username)
+        if not user_id:
+            raise ValueError("User not found")
+        
+        items, total = self.transaction_repo.fetch_all(
+            user_id=user_id,
             filters=filters,
             page=page,
             page_size=page_size,
