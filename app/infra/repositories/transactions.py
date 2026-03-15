@@ -1,77 +1,92 @@
-from sqlalchemy.orm import Session as SQLAlchemySession
-from sqlalchemy import select, and_, extract, func
+from functools import cache
+from typing import Sequence
 
-from app.database import Transaction as TableTransaction
+from sqlalchemy.orm import Session as SQLAlchemySession
+from sqlalchemy import select, extract, func
+
+from app.database import Category, Transaction
 from app.domain.abstractions.repositories import AbstractTransactionRepository
 from app.domain.entities.transactions import TransactionEntity
 from app.domain.value_objects.transactions import TransactionsFilter, TypeOfTransaction
 
 
-class SqlTransactionRepo(AbstractTransactionRepository):
+class AdapterTransactionRepo(AbstractTransactionRepository):
     def __init__(self, session: SQLAlchemySession) -> None:
         self.session = session
 
     def fetch_all(
         self,
+        user_id: int,
         filters: TransactionsFilter,
         page: int,
         page_size: int,
     ) -> tuple[list[TransactionEntity], int]:
         query = (
-            select(TableTransaction)
+            select(Transaction)
             .where(
-                TableTransaction.user_id == filters.user_id
+                Transaction.user_id == user_id
             )
         )
         if filters.month:
-            query = query.where(extract('month', TableTransaction.registration_date) == filters.month)
+            query = query.where(extract('month', Transaction.registration_date) == filters.month)
         
         if filters.year:
-            query = query.where(extract('year', TableTransaction.registration_date) == filters.year)
+            query = query.where(extract('year', Transaction.registration_date) == filters.year)
 
         if filters.description:
             query = (
                 query.where(
-                    TableTransaction.description.ilike(f"{filters.description}")
+                    Transaction.description.ilike(f"%{filters.description}%")
                 )
             )
         if filters.type_of_transaction and filters.type_of_transaction == TypeOfTransaction.INCOME:
             query = (
                 query.where(
-                    TableTransaction.type_of_transaction == TypeOfTransaction.INCOME.value
+                    Transaction.type_of_transaction == TypeOfTransaction.INCOME.value
                 )
             )
         elif filters.type_of_transaction and filters.type_of_transaction == TypeOfTransaction.EXPENSE:
             query = (
                 query.where(
-                    TableTransaction.type_of_transaction == TypeOfTransaction.EXPENSE.value
+                    Transaction.type_of_transaction == TypeOfTransaction.EXPENSE.value
                 )
+            )
+
+        if filters.category:
+            query = (
+                query
+                .join(Category, Transaction.category_id == Category.category_id)
+                .where(func.lower(Category.name) == filters.category.lower())
             )
 
         count_query = (
             select(func.count())
-            .select_from(TableTransaction)
-            .where(
-                TableTransaction.user_id == filters.user_id
-            )
+            .select_from(query.subquery())
         )
         total_result = self.session.execute(statement=count_query)
         total_count = total_result.scalar() or 0
 
         offset = (page - 1) * page_size
-        query = query.limit(page_size).offset(offset)
+        query = (
+            query
+            .order_by(Transaction.registration_date.desc())
+            .limit(page_size)
+            .offset(offset)
+        )
 
         result = self.session.execute(statement=query)
-        transactions: list[TableTransaction] = result.scalars().all()
-        entities = [
+        transactions: Sequence[Transaction] = result.scalars().all()
+        transaction_entities = [
             TransactionEntity(
                 transaction_id=transaction.transaction_id,
                 description=transaction.description,
                 amount=transaction.amount,
-                type_of_transaction=transaction.type_of_transaction,
+                type_of_transaction=transaction.type_of_transaction, # type: ignore
                 registration_date=transaction.registration_date,
-                user_id=transaction.user_id
+                due_date=transaction.due_date,
+                user_id=transaction.user_id,
+                category_id=transaction.category_id,
             )
             for transaction in transactions
         ]
-        return entities, total_count
+        return transaction_entities, total_count
