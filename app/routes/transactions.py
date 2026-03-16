@@ -197,7 +197,6 @@ async def create_transaction(request: Request, transaction_dto: PersistTransacti
         ),
         due_date=TransactionEntity.string_date_to_datetime(transaction_dto.due_date),
         user_id=db_user.user_id,
-        user=db_user,
         category_id=category.category_id,
     )
     session.add(transaction)
