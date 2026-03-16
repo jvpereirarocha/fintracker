@@ -1,7 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from app.domain.value_objects.currency import clean_brl_format_to_decimal
 
 
 class TransactionResponse(BaseModel):
@@ -49,3 +51,40 @@ class PaginatedTransactions(BaseModel):
         from_attributes=True,
         populate_by_name=True,
     )
+
+
+class NewTransactionRequestDTO(BaseModel):
+    description: str
+    amount: Decimal
+    type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
+    registration_date: datetime = Field(alias="registrationDate")
+    due_date: Optional[datetime] = Field(alias="dueDate", default=None)
+    category: str = Field(alias="category")
+
+    @classmethod
+    def _validate_date_format(cls, date_reference: Optional[str]) -> Optional[datetime]:
+        expected_format = "%d/%m/%Y"
+        try:
+            if not date_reference:
+                return None
+            converted_date_reference = datetime.strptime(date_reference, expected_format)
+            return converted_date_reference
+        except ValueError:
+            raise ValueError(
+                f"Formato incorreto para a data. Deve ter o formato DD/MM/YYYY. Exemplo: 13/11/2025"
+            )
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    def validate_amount(cls, amount: str) -> Decimal:
+        return clean_brl_format_to_decimal(amount=amount)
+
+    @field_validator("registration_date", mode="before")
+    @classmethod
+    def validate_registration_date(cls, registration_date: str) -> Optional[date]:
+        return cls._validate_date_format(date_reference=registration_date)
+
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def validate_due_date(cls, due_date: str = "") -> Optional[date]:
+        return cls._validate_date_format(date_reference=due_date)

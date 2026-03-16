@@ -18,3 +18,14 @@ class TransactionEntity:
     due_date: Optional[date]
     user_id: int
     category_id: int
+
+
+@dataclass(frozen=True)
+class NewTransaction:
+    description: str
+    amount: Decimal
+    type_of_transaction: str
+    registration_date: datetime
+    due_date: Optional[datetime]
+    category: str
+

@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 
-from app.api.dependencies.transactions import get_list_transactions_use_case
-from app.api.v1.dtos.transactions import PaginatedTransactions
+from app.api.dependencies.transactions import get_create_transaction_use_case, get_list_transactions_use_case
+from app.api.v1.dtos.transactions import NewTransactionRequestDTO, PaginatedTransactions, TransactionResponse
 from app.dependencies import get_current_user
+from app.domain.entities.transactions import NewTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
+from app.usecases.transactions.create_transaction import CreateTransactionUseCase
 from app.usecases.transactions.list_transactions import ListTransactionsUseCase
 
 
@@ -46,4 +48,30 @@ async def get_all_transactions(
         filters=filters,
         page=page,
         page_size=items_per_page,
+    )
+
+
+@transactions_router.post(
+    path="/",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.CREATED,
+)
+async def create_transaction(
+    request: Request,
+    payload: NewTransactionRequestDTO,
+    use_case: CreateTransactionUseCase = Depends(get_create_transaction_use_case)
+):
+    current_user = request.state.user
+    new_transaction = NewTransaction(
+        description=payload.description,
+        amount=payload.amount,
+        type_of_transaction=payload.type_of_transaction,
+        registration_date=payload.registration_date,
+        due_date=payload.due_date,
+        category=payload.category
+    )
+    
+    return await use_case.execute(
+        new_transaction=new_transaction,
+        username=current_user.sub,
     )

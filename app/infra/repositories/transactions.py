@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import cache
 from typing import Sequence
 
@@ -6,7 +7,7 @@ from sqlalchemy import select, extract, func
 
 from app.database import Category, Transaction
 from app.domain.abstractions.repositories import AbstractTransactionRepository
-from app.domain.entities.transactions import TransactionEntity
+from app.domain.entities.transactions import NewTransaction, TransactionEntity
 from app.domain.value_objects.transactions import TransactionsFilter, TypeOfTransaction
 
 
@@ -90,3 +91,29 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             for transaction in transactions
         ]
         return transaction_entities, total_count
+    
+    def save(self, new_transaction: NewTransaction, user_id: int, category_id: int) -> TransactionEntity:
+        
+        transaction_dao = Transaction(
+            description=new_transaction.description,
+            amount=new_transaction.amount,
+            type_of_transaction=new_transaction.type_of_transaction, # type: ignore
+            registration_date=new_transaction.registration_date,
+            due_date=new_transaction.due_date, # type: ignore
+            user_id=user_id,
+            category_id=category_id,
+        )
+        self.session.add(transaction_dao)
+        self.session.commit()
+        self.session.refresh(transaction_dao)
+        
+        return TransactionEntity(
+            transaction_id=transaction_dao.transaction_id,
+            description=transaction_dao.description,
+            amount=transaction_dao.amount,
+            type_of_transaction=transaction_dao.type_of_transaction, # type: ignore
+            registration_date=transaction_dao.registration_date,
+            due_date=transaction_dao.due_date, # type: ignore
+            user_id=transaction_dao.user_id,
+            category_id=transaction_dao.category_id,
+        )
