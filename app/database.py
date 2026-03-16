@@ -70,8 +70,6 @@ class Transaction:
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     category_id: Mapped[int] = mapped_column(ForeignKey("category.category_id"), nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="transactions")
-
     @validates("due_date")
     def validate_due_date(self, key, value):
         if value and value < self.registration_date:
