@@ -2,12 +2,17 @@ from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 
-from app.api.dependencies.transactions import get_create_transaction_use_case, get_list_transactions_use_case
-from app.api.v1.dtos.transactions import NewTransactionRequestDTO, PaginatedTransactions, TransactionResponse
+from app.api.dependencies.transactions import get_create_transaction_use_case, get_edit_transaction_use_case, get_list_transactions_use_case
+from app.api.v1.dtos.transactions import (
+    SaveTransactionRequestDTO,
+    PaginatedTransactions,
+    TransactionResponse
+)
 from app.dependencies import get_current_user
-from app.domain.entities.transactions import NewTransaction
+from app.domain.entities.transactions import NewTransaction, PatchTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
+from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
 from app.usecases.transactions.list_transactions import ListTransactionsUseCase
 
 
@@ -29,8 +34,8 @@ async def get_all_transactions(
     description: Annotated[str | None, Query(alias="description")] = None,
     category: Annotated[str | None, Query(alias="category")] = None,
     type_of_transaction: Annotated[str | None, Query(alias="typeOfTransaction")] = None,
-    items_per_page: Annotated[int | None, Query(alias="itemsPerPage")] = None,
-    page: Annotated[int | None, Query(alias="page")] = None,
+    items_per_page: Annotated[int, Query(alias="itemsPerPage")] = 10,
+    page: Annotated[int, Query(alias="page")] = 1,
     use_case: ListTransactionsUseCase = Depends(get_list_transactions_use_case)
 ):
     current_user = request.state.user
@@ -58,7 +63,7 @@ async def get_all_transactions(
 )
 async def create_transaction(
     request: Request,
-    payload: NewTransactionRequestDTO,
+    payload: SaveTransactionRequestDTO,
     use_case: CreateTransactionUseCase = Depends(get_create_transaction_use_case)
 ):
     current_user = request.state.user
@@ -74,4 +79,33 @@ async def create_transaction(
     return await use_case.execute(
         new_transaction=new_transaction,
         username=current_user.sub,
+    )
+
+
+@transactions_router.patch(
+    path="/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.CREATED,
+)
+async def update_transaction(
+    request: Request,
+    transaction_id: int,
+    payload: SaveTransactionRequestDTO,
+    use_case: UpdateTransactionUseCase = Depends(get_edit_transaction_use_case)
+):
+    current_user = request.state.user
+    edit_transaction = PatchTransaction(
+        description=payload.description,
+        amount=payload.amount,
+        type_of_transaction=payload.type_of_transaction,
+        registration_date=payload.registration_date,
+        due_date=payload.due_date,
+        category=payload.category
+    )
+    
+    return await use_case.execute(
+        transaction_id=transaction_id,
+        edit_transaction=edit_transaction,
+        username=current_user.sub,
+
     )

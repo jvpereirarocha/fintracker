@@ -33,7 +33,7 @@ class CreateTransactionUseCase(AbstractUseCase):
         if not category_id:
             raise ValueError("Category not found")
         
-        return await self.transaction_repo.save(
+        return self.transaction_repo.save(
             new_transaction=new_transaction,
             user_id=user_id,
             category_id=category_id
