@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.routes.users import users_router
 # from app.routes.transactions import transactions_router
 # from app.routes.dashboard import dashboard_router
-# from app.routes.categories import category_router
+from app.routes.categories import category_router
 from app.api.v1 import api_v1_router
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -27,4 +27,4 @@ app.include_router(router=api_v1_router)
 app.include_router(router=users_router)
 # app.include_router(router=transactions_router)
 # app.include_router(router=dashboard_router)
-# app.include_router(router=category_router)
+app.include_router(router=category_router)

@@ -37,8 +37,6 @@ class User:
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(onupdate=func.now())
 
-    transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
-
     __table_args__ = (
         Index(
             "user_email_pass_idx", "username", "email", "password_hash", "password_salt"
