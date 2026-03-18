@@ -53,7 +53,7 @@ class PaginatedTransactions(BaseModel):
     )
 
 
-class NewTransactionRequestDTO(BaseModel):
+class SaveTransactionRequestDTO(BaseModel):
     description: str
     amount: Decimal
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
