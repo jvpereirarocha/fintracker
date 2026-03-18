@@ -29,3 +29,13 @@ class NewTransaction:
     due_date: Optional[datetime]
     category: str
 
+
+@dataclass(frozen=True)
+class PatchTransaction:
+    description: Optional[str] = None
+    amount: Optional[Decimal] = None
+    type_of_transaction: Optional[str] = None
+    registration_date: Optional[datetime] = None
+    due_date: Optional[datetime] = None
+    category: Optional[str] = None
+

@@ -13,6 +13,8 @@ class AbstractTransactionRepository(AbstractRepository):
 
     def save(self, *args, **kwargs) -> Any: ...
 
+    def update(self, *args, **kwargs) -> Any: ...
+
 
 class AbstractUserRepository(AbstractRepository):
     
@@ -26,3 +28,4 @@ class AbstractCategoryRepository(AbstractRepository):
     def get_category_id_by_name(self, name: str) -> int | None: ...
 
     def save(self, *args, **kwargs) -> Any: ...
+
