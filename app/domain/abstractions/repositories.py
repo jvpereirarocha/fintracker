@@ -15,6 +15,8 @@ class AbstractTransactionRepository(AbstractRepository):
 
     def update(self, *args, **kwargs) -> Any: ...
 
+    def delete(self, *args, **kwargs) -> Any: ...
+
 
 class AbstractUserRepository(AbstractRepository):
     

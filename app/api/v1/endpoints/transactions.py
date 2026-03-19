@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, Query, Request
 from app.api.dependencies.transactions import (
     get_create_transaction_use_case,
     get_edit_transaction_use_case,
-    get_list_transactions_use_case
+    get_list_transactions_use_case,
+    get_delete_transaction_use_case,
+    get_one_transactions_use_case,
 )
 from app.api.v1.dtos.transactions import (
     SaveTransactionRequestDTO,
@@ -17,7 +19,8 @@ from app.domain.entities.transactions import SaveTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
 from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
-from app.usecases.transactions.list_transactions import ListTransactionsUseCase
+from app.usecases.transactions.list_transactions import ListTransactionsUseCase, GetOneTransactionUseCase
+from app.usecases.transactions.delete_transaction import DeleteTransactionUseCase
 
 
 transactions_router = APIRouter(
@@ -57,6 +60,24 @@ async def get_all_transactions(
         filters=filters,
         page=page,
         page_size=items_per_page,
+    )
+
+
+@transactions_router.get(
+    path="/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=HTTPStatus.OK,
+)
+async def fetch_one_transaction(
+    request: Request,
+    transaction_id: int,
+    use_case: GetOneTransactionUseCase = Depends(get_one_transactions_use_case)
+):
+    current_user = request.state.user
+
+    return await use_case.execute(
+        transaction_id=transaction_id,
+        username=current_user.sub,
     )
 
 
@@ -112,4 +133,21 @@ async def update_transaction(
         edit_transaction=edit_transaction,
         username=current_user.sub,
 
+    )
+
+
+@transactions_router.delete(
+    path="/{transaction_id}",
+    status_code=HTTPStatus.NO_CONTENT,
+)
+async def delete_transaction(
+    request: Request,
+    transaction_id: int,
+    use_case: DeleteTransactionUseCase = Depends(get_delete_transaction_use_case)
+):
+    current_user = request.state.user
+    
+    return await use_case.execute(
+        transaction_id=transaction_id,
+        username=current_user.sub,
     )

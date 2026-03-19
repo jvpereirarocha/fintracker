@@ -7,7 +7,8 @@ from app.infra.repositories.transactions import AdapterTransactionRepo
 from app.infra.repositories.users import AdapterUserRepo
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
 from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
-from app.usecases.transactions.list_transactions import ListTransactionsUseCase
+from app.usecases.transactions.list_transactions import ListTransactionsUseCase, GetOneTransactionUseCase
+from app.usecases.transactions.delete_transaction import DeleteTransactionUseCase
 
 
 async def get_list_transactions_use_case(
@@ -17,6 +18,15 @@ async def get_list_transactions_use_case(
     user_repo = AdapterUserRepo(session=db)
     transaction_repo = AdapterTransactionRepo(session=db)
     return ListTransactionsUseCase(user_repo=user_repo, transaction_repo=transaction_repo)
+
+
+async def get_one_transactions_use_case(
+    db: Session = Depends(get_db)
+) -> GetOneTransactionUseCase:
+    
+    user_repo = AdapterUserRepo(session=db)
+    transaction_repo = AdapterTransactionRepo(session=db)
+    return GetOneTransactionUseCase(user_repo=user_repo, transaction_repo=transaction_repo)
 
 
 async def get_create_transaction_use_case(
@@ -44,4 +54,16 @@ async def get_edit_transaction_use_case(
         user_repo=user_repo,
         transaction_repo=transaction_repo,
         category_repo=category_repo
+    )
+
+
+async def get_delete_transaction_use_case(
+    db: Session = Depends(get_db)
+) -> DeleteTransactionUseCase:
+    user_repo = AdapterUserRepo(session=db)
+    transaction_repo = AdapterTransactionRepo(session=db)
+    
+    return DeleteTransactionUseCase(
+        user_repo=user_repo,
+        transaction_repo=transaction_repo,
     )

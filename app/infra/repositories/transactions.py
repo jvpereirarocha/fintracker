@@ -13,6 +13,27 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
     def __init__(self, session: SQLAlchemySession) -> None:
         self.session = session
 
+    def _get_transaction_by_id(self, transaction_id: int) -> Transaction | None:
+        transaction_dao = self.session.query(Transaction).where(Transaction.transaction_id == transaction_id).first()
+        return transaction_dao
+    
+    def fetch_one(self, transaction_id: int) -> TransactionEntity:
+        transaction = self._get_transaction_by_id(transaction_id=transaction_id)
+        if not transaction:
+            raise ValueError("Transaction not found")
+        
+        return TransactionEntity(
+            transaction_id=transaction.transaction_id,
+            description=transaction.description,
+            amount=transaction.amount,
+            type_of_transaction=transaction.type_of_transaction, # type: ignore
+            registration_date=transaction.registration_date,
+            due_date=transaction.due_date,
+            user_id=transaction.user_id,
+            category_id=transaction.category_id,
+        )
+
+
     def fetch_all(
         self,
         user_id: int,
@@ -96,15 +117,15 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         edit_transaction: SaveTransaction,
         category_id: int,
     ) -> TransactionEntity:
-        transaction_dao = self.session.query(Transaction).where(Transaction.transaction_id == transaction_id).first()
+        transaction_dao = self._get_transaction_by_id(transaction_id=transaction_id)
         if not transaction_dao:
             raise ValueError("Transaction not found")
         
         transaction_dao.description = edit_transaction.description
         transaction_dao.amount = edit_transaction.amount
-        transaction_dao.type_of_transaction = edit_transaction.type_of_transaction
+        transaction_dao.type_of_transaction = edit_transaction.type_of_transaction # type: ignore
         transaction_dao.registration_date = edit_transaction.registration_date
-        transaction_dao.due_date = edit_transaction.due_date
+        transaction_dao.due_date = edit_transaction.due_date # type: ignore
         transaction_dao.category_id = category_id
         
         self.session.commit()
@@ -146,3 +167,12 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             user_id=transaction_dao.user_id,
             category_id=transaction_dao.category_id,
         )
+    
+    def delete(self, transaction_id: int) -> None:
+        transaction = self._get_transaction_by_id(transaction_id=transaction_id)
+        if not transaction:
+            raise ValueError("Transaction not found")
+        
+        self.session.delete(transaction)
+        self.session.commit()
+        return None
