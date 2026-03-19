@@ -2,14 +2,18 @@ from http import HTTPStatus
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request
 
-from app.api.dependencies.transactions import get_create_transaction_use_case, get_edit_transaction_use_case, get_list_transactions_use_case
+from app.api.dependencies.transactions import (
+    get_create_transaction_use_case,
+    get_edit_transaction_use_case,
+    get_list_transactions_use_case
+)
 from app.api.v1.dtos.transactions import (
     SaveTransactionRequestDTO,
     PaginatedTransactions,
     TransactionResponse
 )
 from app.dependencies import get_current_user
-from app.domain.entities.transactions import NewTransaction, PatchTransaction
+from app.domain.entities.transactions import SaveTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
 from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
@@ -46,7 +50,7 @@ async def get_all_transactions(
         year=year,
         description=description,
         category=category,
-        type_of_transaction=type_of_transaction
+        type_of_transaction=type_of_transaction # type: ignore
     )
 
     return await use_case.execute(
@@ -67,7 +71,7 @@ async def create_transaction(
     use_case: CreateTransactionUseCase = Depends(get_create_transaction_use_case)
 ):
     current_user = request.state.user
-    new_transaction = NewTransaction(
+    new_transaction = SaveTransaction(
         description=payload.description,
         amount=payload.amount,
         type_of_transaction=payload.type_of_transaction,
@@ -82,10 +86,10 @@ async def create_transaction(
     )
 
 
-@transactions_router.patch(
+@transactions_router.put(
     path="/{transaction_id}",
     response_model=TransactionResponse,
-    status_code=HTTPStatus.CREATED,
+    status_code=HTTPStatus.OK,
 )
 async def update_transaction(
     request: Request,
@@ -94,7 +98,7 @@ async def update_transaction(
     use_case: UpdateTransactionUseCase = Depends(get_edit_transaction_use_case)
 ):
     current_user = request.state.user
-    edit_transaction = PatchTransaction(
+    edit_transaction = SaveTransaction(
         description=payload.description,
         amount=payload.amount,
         type_of_transaction=payload.type_of_transaction,

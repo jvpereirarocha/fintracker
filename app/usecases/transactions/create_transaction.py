@@ -4,7 +4,7 @@ from app.domain.abstractions.repositories import (
     AbstractUserRepository,
     AbstractCategoryRepository,
 )
-from app.domain.entities.transactions import NewTransaction, TransactionEntity
+from app.domain.entities.transactions import SaveTransaction, TransactionEntity
 
 
 class CreateTransactionUseCase(AbstractUseCase):
@@ -21,7 +21,7 @@ class CreateTransactionUseCase(AbstractUseCase):
 
     async def execute(
         self,
-        new_transaction: NewTransaction,
+        new_transaction: SaveTransaction,
         username: str,
     ) -> TransactionEntity:
         

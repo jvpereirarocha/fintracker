@@ -21,7 +21,7 @@ class TransactionEntity:
 
 
 @dataclass(frozen=True)
-class NewTransaction:
+class SaveTransaction:
     description: str
     amount: Decimal
     type_of_transaction: str
@@ -29,13 +29,8 @@ class NewTransaction:
     due_date: Optional[datetime]
     category: str
 
+    def __post_init__(self):
+        if self.type_of_transaction == TypeOfTransaction.EXPENSE.value and not self.due_date:
+            raise ValueError("Due date is required for expense transactions")
 
-@dataclass(frozen=True)
-class PatchTransaction:
-    description: Optional[str] = None
-    amount: Optional[Decimal] = None
-    type_of_transaction: Optional[str] = None
-    registration_date: Optional[datetime] = None
-    due_date: Optional[datetime] = None
-    category: Optional[str] = None
 

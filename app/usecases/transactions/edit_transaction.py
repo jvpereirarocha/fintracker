@@ -4,7 +4,7 @@ from app.domain.abstractions.repositories import (
     AbstractUserRepository,
     AbstractCategoryRepository,
 )
-from app.domain.entities.transactions import PatchTransaction, TransactionEntity
+from app.domain.entities.transactions import SaveTransaction, TransactionEntity
 
 
 class UpdateTransactionUseCase(AbstractUseCase):
@@ -22,7 +22,7 @@ class UpdateTransactionUseCase(AbstractUseCase):
     async def execute(
         self,
         transaction_id: int,
-        edit_transaction: PatchTransaction,
+        edit_transaction: SaveTransaction,
         username: str,
     ) -> TransactionEntity:
         
@@ -30,11 +30,9 @@ class UpdateTransactionUseCase(AbstractUseCase):
         if not user_id:
             raise ValueError("User not found")
         
-        category_id = None
-        if edit_transaction.category:
-            category_id = self.category_repo.get_category_id_by_name(name=edit_transaction.category)
-            if not category_id:
-                raise ValueError("Category not found")
+        category_id = self.category_repo.get_category_id_by_name(name=edit_transaction.category)
+        if not category_id:
+            raise ValueError("Category not found")
         
         return self.transaction_repo.update(
             transaction_id=transaction_id,
