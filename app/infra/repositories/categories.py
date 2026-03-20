@@ -1,8 +1,11 @@
+from typing import Sequence
+
 from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy import select, func
 
 from app.database import Category
 from app.domain.abstractions.repositories import AbstractCategoryRepository
+from app.domain.entities.categories import CategoryEntity, SaveCategory
 
 
 class AdapterCategoryRepo(AbstractCategoryRepository):
@@ -13,3 +16,68 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
         query = select(Category.category_id).where(func.lower(Category.name) == name.lower())
         result = self.session.execute(statement=query)
         return result.scalar() or 0
+    
+    def get_category_by_id(self, category_id: int) -> Category:
+        query = select(Category.category_id).where(Category.category_id == category_id)
+        result = self.session.execute(statement=query)
+        return result.scalar_one_or_none()
+    
+    def fetch_one(self, category_id: int) -> CategoryEntity:
+        category_dao = self.get_category_by_id(category_id=category_id)
+        if not category_dao:
+            raise ValueError("Category not found")
+        return CategoryEntity(
+            name=category_dao.name,
+            description=category_dao.description,
+        )
+    
+    def fetch_all(
+        self,
+        page_size: int,
+        offset: int,
+    ) -> tuple[list[CategoryEntity], int]:
+        query = (
+            select(Category)
+        )
+        count_query = (
+            select(func.count())
+            .select_from(query.subquery())
+        )
+        total_result = self.session.execute(statement=count_query)
+        total_count = total_result.scalar() or 0
+        query = (
+            query
+            .order_by(Category.category_id.asc())
+            .limit(page_size)
+            .offset(offset)
+        )
+        results = self.session.execute(statement=query)
+        categories: Sequence[Category] = results.scalars().all()
+        category_entities = [
+            CategoryEntity(
+                category_id=category.category_id,
+                name=category.name,
+                description=category.description,
+            )
+            for category in categories
+        ]
+        return category_entities, total_count
+    
+    def save(self, new_category: SaveCategory) -> CategoryEntity:
+        category = Category(
+            name=new_category.name,
+            description=new_category.description
+        )
+        self.session.add(category)
+        self.session.commit()
+
+    def update(self, category_id: int, edit_category: SaveCategory) -> CategoryEntity:
+        category = self.get_category_by_id(category_id=category_id)
+        if not category:
+            raise ValueError("Category not found")
+        
+        category.name = edit_category.name
+        category.description = edit_category.description
+        self.session.commit()
+        self.session.refresh(category)
+        return CategoryEntity(name=category.name, description=category.description)

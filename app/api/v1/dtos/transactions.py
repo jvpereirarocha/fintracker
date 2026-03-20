@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from app.api.v1.dtos.pagination import Pagination
 from app.domain.value_objects.currency import clean_brl_format_to_decimal
 
 
@@ -38,19 +39,8 @@ class TransactionResponse(BaseModel):
         return ""
 
 
-class PaginatedTransactions(BaseModel):
+class PaginatedTransactions(Pagination[TransactionResponse]):
     items: list[TransactionResponse] = Field(alias="transactions")
-    page: int
-    total_count: int = Field(alias="totalItems")
-    total_of_pages: int = Field(alias="totalOfPages")
-    items_per_page: int = Field(alias="itemsPerPage")
-    prev: int | None
-    next_page: int | None = Field(alias="next")
-
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
 
 
 class SaveTransactionRequestDTO(BaseModel):
