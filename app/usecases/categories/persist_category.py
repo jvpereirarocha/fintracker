@@ -3,6 +3,7 @@ from app.domain.abstractions.repositories import (
     AbstractCategoryRepository,
 )
 from app.domain.entities.categories import SaveCategory, PartialUpdateCategory, CategoryEntity
+from app.domain.exceptions.categories import CategoryAlreadyExistsException, CategoryNotFoundException
 
 
 class CreateCategoryUseCase(AbstractUseCase):
@@ -20,7 +21,7 @@ class CreateCategoryUseCase(AbstractUseCase):
         
         category_id = self.category_repo.get_category_id_by_name(name=new_category.name)
         if category_id:
-            raise ValueError(f"Category {new_category.name} already exists")
+            raise CategoryAlreadyExistsException(f"Category {new_category.name} already exists")
         
         return self.category_repo.save(
             new_category=new_category,
@@ -34,20 +35,29 @@ class UpdateCategoryUseCase(AbstractUseCase):
     ):
         self.category_repo = category_repo
 
-
     async def execute(
         self,
         category_id: int,
         edit_category: PartialUpdateCategory,
     ) -> CategoryEntity:
         
-        category_already_exists = False
+        category = self.category_repo.get_category_by_id(category_id=category_id)
+        if not category:
+            raise CategoryNotFoundException(
+                message=f"Category with id {category_id} not found"
+            )
+        
+        category_with_the_same_name_already_exists = False
         if edit_category.name:
             found_category_id =  self.category_repo.get_category_id_by_name(name=edit_category.name)
-            category_already_exists = found_category_id and found_category_id != category_id
+            category_with_the_same_name_already_exists = bool(
+                found_category_id and found_category_id != category_id
+            )
         
-        if category_already_exists:
-            raise ValueError(f"Category {edit_category.name} already exists")
+        if category_with_the_same_name_already_exists:
+            raise CategoryAlreadyExistsException(
+                message=f"Category {edit_category.name} already exists"
+            )
         
         return self.category_repo.update(
             category_id=category_id,

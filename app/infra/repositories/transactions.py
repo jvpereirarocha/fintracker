@@ -13,15 +13,30 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
     def __init__(self, session: SQLAlchemySession) -> None:
         self.session = session
 
-    def _get_transaction_by_id(self, transaction_id: int) -> Transaction | None:
-        transaction_dao = self.session.query(Transaction).where(Transaction.transaction_id == transaction_id).first()
+    def _get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        """
+        It doesn't check if the transaction exists
+
+        We must handle it in the use case level
+        
+        :param transaction_id: int
+        :return: Transaction
+        """
+        query = (
+            select(Transaction)
+            .where(Transaction.transaction_id == transaction_id)
+        )
+        result = self.session.execute(statement=query)
+        transaction_dao = result.scalar_one()
         return transaction_dao
+    
+    def exists(self, transaction_id: int) -> bool:
+        query = select(Transaction).where(Transaction.transaction_id == transaction_id)
+        result = self.session.execute(statement=query)
+        return bool(result.scalar_one_or_none())
     
     def fetch_one(self, transaction_id: int) -> TransactionEntity:
         transaction = self._get_transaction_by_id(transaction_id=transaction_id)
-        if not transaction:
-            raise ValueError("Transaction not found")
-        
         return TransactionEntity(
             transaction_id=transaction.transaction_id,
             description=transaction.description,
@@ -118,9 +133,6 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         category_id: int,
     ) -> TransactionEntity:
         transaction_dao = self._get_transaction_by_id(transaction_id=transaction_id)
-        if not transaction_dao:
-            raise ValueError("Transaction not found")
-        
         transaction_dao.description = edit_transaction.description
         transaction_dao.amount = edit_transaction.amount
         transaction_dao.type_of_transaction = edit_transaction.type_of_transaction # type: ignore
@@ -169,10 +181,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         )
     
     def delete(self, transaction_id: int) -> None:
-        transaction = self._get_transaction_by_id(transaction_id=transaction_id)
-        if not transaction:
-            raise ValueError("Transaction not found")
-        
+        transaction = self._get_transaction_by_id(transaction_id=transaction_id)        
         self.session.delete(transaction)
         self.session.commit()
         return None

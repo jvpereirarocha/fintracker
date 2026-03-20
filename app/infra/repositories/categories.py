@@ -12,21 +12,31 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
     def __init__(self, session: SQLAlchemySession) -> None:
         self.session = session
 
+    def _get_category_dao(self, category_id: int) -> Category:
+        """
+        It doesn't check if the category exists
+
+        We must handle it in the use case level
+
+        :param category_id: int
+        :return: Category
+        """
+        query = select(Category).where(Category.category_id == category_id)
+        result = self.session.execute(statement=query)
+        category = result.scalar_one()
+        return category
+
     def get_category_id_by_name(self, name: str) -> int:
         query = select(Category.category_id).where(func.lower(Category.name) == name.lower())
         result = self.session.execute(statement=query)
         return result.scalar() or 0
     
-    def get_category_by_id(self, category_id: int) -> Category | None: # type: ignore
+    def get_category_by_id(self, category_id: int) -> CategoryEntity | None: # type: ignore
         query = select(Category).where(Category.category_id == category_id)
         result = self.session.execute(statement=query)
-        return result.scalar_one_or_none()
-    
-    def fetch_one(self, category_id: int) -> CategoryEntity:
-        category_dao = self.get_category_by_id(category_id=category_id)
+        category_dao = result.scalar_one_or_none()
         if not category_dao:
-            raise ValueError("Category not found")
-        
+            return None
         return CategoryEntity(
             category_id=category_dao.category_id,
             name=category_dao.name,
@@ -67,7 +77,7 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
     
     def save(self, new_category: SaveCategory) -> CategoryEntity:
         category = Category(
-            name=new_category.name,
+            name=new_category.name.capitalize(),
             description=new_category.description,
             updated_at=new_category.updated_at,
         )
@@ -77,11 +87,9 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
         return CategoryEntity(category_id=category.category_id, name=category.name, description=category.description)
 
     def update(self, category_id: int, edit_category: PartialUpdateCategory) -> CategoryEntity:
-        category = self.get_category_by_id(category_id=category_id)
-        if not category:
-            raise ValueError("Category not found")
-        
-        category.name = edit_category.name or category.name
+        category = self._get_category_dao(category_id=category_id)
+        category_name = edit_category.name or category.name
+        category.name = category_name.capitalize()
         category.description = edit_category.description or category.description
         category.updated_at = edit_category.updated_at
         self.session.commit()
@@ -93,10 +101,7 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
         )
     
     def delete(self, category_id: int) -> None:
-        category = self.get_category_by_id(category_id=category_id)
-        if not category:
-            raise ValueError("Category not found")
-        
+        category = self._get_category_dao(category_id=category_id)
         self.session.delete(category)
         self.session.commit()
         return None

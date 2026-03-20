@@ -5,6 +5,8 @@ from app.domain.abstractions.repositories import (
     AbstractCategoryRepository,
 )
 from app.domain.entities.transactions import SaveTransaction, TransactionEntity
+from app.domain.exceptions.categories import CategoryNotFoundException
+from app.domain.exceptions.users import UserNotFoundException
 
 
 class UpdateTransactionUseCase(AbstractUseCase):
@@ -28,11 +30,11 @@ class UpdateTransactionUseCase(AbstractUseCase):
         
         user_id = self.user_repo.get_user_id_by_username(username=username)
         if not user_id:
-            raise ValueError("User not found")
+            raise UserNotFoundException(f"User {username} not found")
         
         category_id = self.category_repo.get_category_id_by_name(name=edit_transaction.category)
         if not category_id:
-            raise ValueError("Category not found")
+            raise CategoryNotFoundException(f"Category {edit_transaction.category} not found")
         
         return self.transaction_repo.update(
             transaction_id=transaction_id,

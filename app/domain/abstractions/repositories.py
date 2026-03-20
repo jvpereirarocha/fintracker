@@ -19,6 +19,8 @@ class AbstractTransactionRepository(AbstractRepository):
 
     def delete(self, *args, **kwargs) -> Any: ...
 
+    def exists(self, transaction_id: int) -> bool: ...
+
 
 class AbstractUserRepository(AbstractRepository):
     
