@@ -41,7 +41,6 @@ async def create_user(user_schema: CreateUser):
         password_hash=user_entity.password_hash,
         password_salt=user_entity.password_salt,
         username=user_entity.username,
-        transactions=[],
         updated_at=datetime.now(),
     )
     session.add(db_user)

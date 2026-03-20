@@ -2,6 +2,7 @@ from app.domain.abstractions.repositories import AbstractCategoryRepository
 from app.domain.abstractions.usecases import AbstractUseCase
 from app.domain.entities.base import PagedResponse
 from app.domain.entities.categories import CategoryEntity
+from app.domain.value_objects.pagination import PaginationParams
 
 
 class ListCategoriesUseCase(AbstractUseCase):
@@ -10,21 +11,31 @@ class ListCategoriesUseCase(AbstractUseCase):
 
     async def execute(
         self,
-        page: int = 1,
-        page_size: int = 10
+        pagination: PaginationParams,
     ) -> PagedResponse[CategoryEntity]:
         
-        offset = (page - 1) * page_size
-        
         categories, total = self.category_repo.fetch_all(
-            page_size=page_size,
-            offset=offset,
+            limit=pagination.page_size,
+            offset=pagination.offset,
         )
 
         return PagedResponse(
             items=categories,
             total_count=total,
-            page=page,
-            items_per_page=page_size,
+            page=pagination.page,
+            items_per_page=pagination.page_size,
         )
 
+
+class GetOneCategoryUseCase(AbstractUseCase):
+    def __init__(self, category_repo: AbstractCategoryRepository) -> None:
+        self.category_repo = category_repo
+
+    async def execute(
+        self,
+        category_id: int,
+    ) -> CategoryEntity:
+        
+        return self.category_repo.fetch_one(
+            category_id=category_id,
+        )

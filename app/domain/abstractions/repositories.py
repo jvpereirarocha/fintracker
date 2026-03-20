@@ -1,5 +1,7 @@
 from typing import Protocol, Any
 
+from app.domain.entities.categories import CategoryEntity, PartialUpdateCategory
+
 
 class AbstractRepository(Protocol):
     pass
@@ -27,9 +29,17 @@ class AbstractUserRepository(AbstractRepository):
 
 class AbstractCategoryRepository(AbstractRepository):
     
-    def get_category_id_by_name(self, name: str) -> int | None: ...
+    def get_category_id_by_name(self, name: str) -> int: ...
+
+    def get_category_by_id(self, category_id: int) -> CategoryEntity | None: ...
 
     def save(self, *args, **kwargs) -> Any: ...
 
     def fetch_all(self, *args, **kwargs) -> Any: ...
+
+    def fetch_one(self, *args, **kwargs) -> Any: ...
+
+    def update(self, category_id: int, edit_category: PartialUpdateCategory) -> CategoryEntity: ...
+
+    def delete(self, category_id: int) -> None: ...
 
