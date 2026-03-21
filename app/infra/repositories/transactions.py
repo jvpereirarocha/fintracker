@@ -1,11 +1,14 @@
-from typing import Sequence
+from datetime import date
+from decimal import Decimal
+from typing import Sequence, Literal
 
 from sqlalchemy.orm import Session as SQLAlchemySession
-from sqlalchemy import select, extract, func
+from sqlalchemy import select, extract, func, case
 
 from app.database import Category, Transaction
 from app.domain.abstractions.repositories import AbstractTransactionRepository
 from app.domain.entities.transactions import SaveTransaction, TransactionEntity
+from app.domain.value_objects.dashboard import DashboardValues
 from app.domain.value_objects.transactions import TransactionsFilter, TypeOfTransaction
 
 
@@ -185,3 +188,38 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         self.session.delete(transaction)
         self.session.commit()
         return None
+
+    def get_sum_of_transactions_by_interval(
+        self,
+        user_id: int,
+        start_date: date,
+        end_date: date,
+    ) -> DashboardValues:
+
+        result = self.session.execute(
+            select(
+                func.sum(
+                    case(
+                        (Transaction.type_of_transaction == "expense", Transaction.amount) # type: ignore
+                    )
+                ).label("total_expense"),
+                func.sum(
+                    case(
+                        (Transaction.type_of_transaction == "income", Transaction.amount) # type: ignore
+                    )
+                ).label("total_income"),
+            )
+            .where(
+                (Transaction.user_id == user_id)
+                & (Transaction.registration_date >= start_date)
+                & (Transaction.registration_date <= end_date)
+            )
+        ).first()
+
+        total_expense: Decimal = result.total_expense if result and result.total_expense else Decimal(0)
+        total_income: Decimal = result.total_income if result and result.total_income else Decimal(0)
+
+        return DashboardValues(
+            total_expense=total_expense,
+            total_income=total_income,
+        )

@@ -1,9 +1,24 @@
+from dataclasses import dataclass
 from decimal import Decimal
 
-from app.domain.entities.transactions import TransactionEntity
+
+@dataclass(frozen=True)
+class DashboardValues:
+    total_expense: Decimal
+    total_income: Decimal
 
 
-class FormatDashboardValues:
-    @classmethod
-    def from_decimal_to_brl(cls, amount: Decimal) -> str:
-        return TransactionEntity.format_to_currency(amount)
+@dataclass(frozen=True)
+class DashboardResume:
+    monthly_revenues: Decimal
+    monthly_expenses: Decimal
+    yearly_revenues: Decimal
+    yearly_expenses: Decimal
+
+    @property
+    def monthly_balance(self) -> Decimal:
+        return Decimal(self.monthly_revenues - self.monthly_expenses)
+
+    @property
+    def yearly_balance(self) -> Decimal:
+        return Decimal(self.yearly_revenues - self.yearly_expenses)

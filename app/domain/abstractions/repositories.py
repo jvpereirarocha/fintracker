@@ -1,6 +1,9 @@
-from typing import Protocol, Any
+from datetime import date
+from decimal import Decimal
+from typing import Protocol, Any, Literal
 
 from app.domain.entities.categories import CategoryEntity, PartialUpdateCategory
+from app.domain.value_objects.dashboard import DashboardValues
 
 
 class AbstractRepository(Protocol):
@@ -20,6 +23,13 @@ class AbstractTransactionRepository(AbstractRepository):
     def delete(self, *args, **kwargs) -> Any: ...
 
     def exists(self, transaction_id: int) -> bool: ...
+
+    def get_sum_of_transactions_by_interval(
+        self,
+        user_id: int,
+        start_date: date,
+        end_date: date,
+    ) -> DashboardValues: ...
 
 
 class AbstractUserRepository(AbstractRepository):

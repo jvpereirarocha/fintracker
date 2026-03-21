@@ -5,7 +5,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 from datetime import date, datetime
 
-from app.domain.value_objects.currency import REGEX_BRL_FORMAT
+from app.domain.business_logic.conversor import REGEX_BRL_FORMAT
 
 
 class TransactionResponse(BaseModel):
