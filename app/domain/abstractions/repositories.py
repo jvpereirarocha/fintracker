@@ -1,8 +1,9 @@
 from datetime import date
-from decimal import Decimal
-from typing import Protocol, Any, Literal
+from typing import Protocol, Any
 
 from app.domain.entities.categories import CategoryEntity, PartialUpdateCategory
+from app.domain.entities.users import UserEntity
+from app.domain.value_objects.auth import SavedUser, UserLogin
 from app.domain.value_objects.dashboard import DashboardValues
 
 
@@ -36,7 +37,11 @@ class AbstractUserRepository(AbstractRepository):
     
     def get_user_id_by_username(self, username: str) -> int | None: ...
 
-    def save(self, *args, **kwargs) -> Any: ...
+    def save(self, user: UserEntity) -> SavedUser: ...
+
+    def get_user_password_by_id(self, user_id: int) -> UserLogin: ...
+
+    def user_already_exists(self, username: str, email: str) -> bool: ...
 
 
 class AbstractCategoryRepository(AbstractRepository):
