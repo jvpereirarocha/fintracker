@@ -25,7 +25,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 HEALTHCHECK --interval=10s --timeout=5s \
-    CMD curl -f http://localhost:8000/users/test || exit 1
+    CMD curl -f http://localhost:8000/api/v1/test || exit 1
 
 SHELL ["/bin/bash"]
 USER admin
