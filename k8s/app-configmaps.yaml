@@ -6,3 +6,4 @@ metadata:
 data:
   TOKEN_TYPE: bearer
   ALGORITHM: HS256
+  POSTGRES_HOST: "172.17.0.1"
