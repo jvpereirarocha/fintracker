@@ -14,7 +14,7 @@ from app.api.v1.dtos.transactions import (
     PaginatedTransactions,
     TransactionResponse
 )
-from app.dependencies import get_current_user
+from app.api.dependencies.base import get_current_user
 from app.domain.entities.transactions import SaveTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase

@@ -1,14 +1,18 @@
-from fastapi import Query, Request
+from fastapi import Depends, Query, Request
 
 from app.database import Session
+from app.domain.value_objects.auth import JWTPayload
 from app.domain.value_objects.pagination import PaginationParams
-from app.middleware import get_user_info
+from app.infra.auth.token import TokenProvider
 
 
-async def get_current_user(request: Request):
-    user_info = await get_user_info(request=request)
-    request.state.user = user_info
-    return user_info
+def get_current_user(
+    request: Request,
+    token_provider: TokenProvider = Depends(TokenProvider),
+) -> JWTPayload:
+    token_data = token_provider.decode_token(request=request)
+    request.state.user = token_data
+    return token_data
 
 def get_db():
     db = Session()

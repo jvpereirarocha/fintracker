@@ -12,7 +12,7 @@ from app.api.dependencies.categories import (
     get_delete_category_use_case
 )
 from app.api.v1.dtos.categories import CategoryResponse, PaginatedCategories, SaveCategoryDTO, UpdatePartialCategoryDTO
-from app.dependencies import get_current_user
+from app.api.dependencies.base import get_current_user
 from app.domain.entities.categories import PartialUpdateCategory, SaveCategory
 from app.domain.value_objects.pagination import PaginationParams
 from app.usecases.categories.list_categories import ListCategoriesUseCase, GetOneCategoryUseCase

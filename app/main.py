@@ -23,8 +23,6 @@ app.add_middleware(
 
 
 app.include_router(router=api_v1_router)
-app.include_router(router=users_router)
-# app.include_router(router=dashboard_router)
 
 app.add_exception_handler(BaseDomainException, domain_exception_handler) # type: ignore
 app.add_exception_handler(Exception, global_500_exception_handler)

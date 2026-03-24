@@ -9,7 +9,7 @@ from app.domain.exceptions.auth import AuthorizationHeaderMissingException, Inva
 from app.domain.value_objects.auth import JWTPayload, PublicToken
 
 
-settings = Settings()
+settings = Settings() # type: ignore
 
 
 class TokenProvider(TokenProviderAbstraction):
@@ -25,7 +25,7 @@ class TokenProvider(TokenProviderAbstraction):
             "iat": datetime.now(tz=timezone.utc)
         }
 
-    def encode_token(self, username: str, token_expiration: timedelta | None) -> PublicToken:
+    def encode_token(self, username: str, token_expiration: timedelta | None = None) -> PublicToken:
         if not token_expiration:
             token_expiration = timedelta(minutes=45)
         
@@ -34,7 +34,7 @@ class TokenProvider(TokenProviderAbstraction):
         encoded_jwt = jwt.encode(
             payload=data,
             key=settings.JWT_SECRET_KEY,
-            algorithm=[settings.ALGORITHM]
+            algorithm=settings.ALGORITHM # type: ignore
         )
         return PublicToken(
             access_token=encoded_jwt,
