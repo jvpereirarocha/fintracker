@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from app.api.handlers import domain_exception_handler, global_500_exception_handler
 from app.domain.exceptions.base import BaseDomainException
-from app.routes.users import users_router
 from app.api.v1 import api_v1_router
 from fastapi.middleware.cors import CORSMiddleware
 
