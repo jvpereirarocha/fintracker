@@ -5,3 +5,4 @@ metadata:
   namespace: fintracker-dev
 data:
   TOKEN_TYPE: bearer
+  ALGORITHM: HS256
