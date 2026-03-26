@@ -1,9 +1,9 @@
 from fastapi import Depends, Query, Request
 
-from app.database import Session
 from app.domain.value_objects.auth import JWTPayload
 from app.domain.value_objects.pagination import PaginationParams
 from app.infra.auth.token import TokenProvider
+from app.infra.database.session import LocalSessionMaker
 
 
 def get_current_user(
@@ -14,8 +14,9 @@ def get_current_user(
     request.state.user = token_data
     return token_data
 
+
 def get_db():
-    db = Session()
+    db = LocalSessionMaker()
     try:
         yield db
     finally:
@@ -24,6 +25,8 @@ def get_db():
 
 def get_pagination_params(
     page: int = Query(1, ge=1, alias="page", description="Page number"),
-    page_size: int = Query(10, ge=1, le=20, alias="itemsPerPage", description="Page size")
+    page_size: int = Query(
+        10, ge=1, le=20, alias="itemsPerPage", description="Page size"
+    ),
 ) -> PaginationParams:
     return PaginationParams(page=page, page_size=page_size)
