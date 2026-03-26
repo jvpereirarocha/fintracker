@@ -2,7 +2,7 @@ FROM python:3.12.4-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
-WORKDIR /app
+WORKDIR /src
 COPY requirements.txt .
 COPY entrypoint.sh .
 
@@ -10,10 +10,10 @@ RUN pip install -r requirements.txt
 
 COPY . .
 RUN groupadd -r admin && useradd -r -g admin admin
-RUN chown -R admin:admin /app
-RUN chown -R admin:admin /app/app/migrations
-RUN chown admin:admin /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+RUN chown -R admin:admin /src
+RUN chown -R admin:admin /src/app/infra/migrations
+RUN chown admin:admin /src/entrypoint.sh
+RUN chmod +x /src/entrypoint.sh
 
 
 RUN apt-get update \
@@ -30,4 +30,4 @@ HEALTHCHECK --interval=10s --timeout=5s \
 SHELL ["/bin/bash"]
 USER admin
 
-CMD ["/bin/bash", "/app/entrypoint.sh"]
+CMD ["/bin/bash", "/src/entrypoint.sh"]
