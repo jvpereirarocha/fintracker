@@ -19,7 +19,8 @@ spec:
     spec:
       containers:
         - name: fintracker-web
-          image: jvrochadev/fintracker:2.0
+          image: jvrochadev/fintracker:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:
