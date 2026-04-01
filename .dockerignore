@@ -2,3 +2,13 @@
 __pycache__
 *.pyc
 pyrightconfig.json
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.git
+.gitignore
+.pytest_cache/
+.vscode/
+.idea/
+*.log
