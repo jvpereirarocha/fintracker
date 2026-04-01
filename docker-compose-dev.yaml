@@ -32,8 +32,34 @@ services:
       - fintracker-network
     env_file:
       - .env
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-fintracker
+    volumes:
+      - ./observability/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    ports:
+      - 9090:9090
+    networks:
+      - fintracker-network
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-fintracker
+    ports:
+      - 3005:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - fintracker-network
 
 volumes:
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./observability/prometheus
+      o: bind
+  grafana_data:
   postgres_data:
 
 networks:

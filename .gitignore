@@ -6,3 +6,5 @@ k8s/*-secrets.yaml
 .idea/
 .vscode/
 .vscode
+backup.sql
+observability
