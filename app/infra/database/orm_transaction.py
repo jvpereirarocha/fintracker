@@ -9,12 +9,10 @@ from sqlalchemy.orm import (
     validates,
 )
 
+from app.domain.business_logic.validators import due_date_validator, status_validator
+from app.domain.value_objects.transactions import TransactionStatus, TypeOfTransaction
 from app.infra.database.base import mapped_registry as base_mapped_registry
 
-
-class TypeTransaction(Enum):
-    INCOME = "income"
-    EXPENSE = "expense"
 
 
 @base_mapped_registry.mapped_as_dataclass
@@ -24,7 +22,8 @@ class Transaction:
     transaction_id: Mapped[int] = mapped_column(init=False, primary_key=True)
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Float(asdecimal=True), nullable=False)
-    type_of_transaction: Mapped[TypeTransaction] = mapped_column(String(20))
+    type_of_transaction: Mapped[TypeOfTransaction] = mapped_column(String(20))
+    status: Mapped[TransactionStatus] = mapped_column(String(20), default=TransactionStatus.ALREADY_PAID)
     registration_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     due_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
@@ -34,17 +33,20 @@ class Transaction:
 
     @validates("due_date")
     def validate_due_date(self, key, value):
-        if value and value < self.registration_date:
-            raise ValueError(
-                "A data de vencimento deve ser maior que a data de registro"
-            )
-        if (
-            self.type_of_transaction
-            and self.type_of_transaction == TypeTransaction.EXPENSE
-            and not self.due_date
-        ):
-            raise ValueError("A data de vencimento deve ser informada para despesas")
-        return value
+        return due_date_validator(
+            registration_date=self.registration_date,
+            type_of_transaction=self.type_of_transaction,
+            due_date=self.due_date,
+            value=value
+        )
+    
+    @validates("status")
+    def validate_status(self, key, value):
+        return status_validator(
+            type_of_transaction=self.type_of_transaction,
+
+            value=value
+        )
 
     __table_args__ = (
         Index("desc_amount_idx", "description", "amount"),
@@ -59,7 +61,7 @@ class Transaction:
             "type_of_transaction",
             "due_date",
             postgresql_where=(
-                type_of_transaction == TypeTransaction.EXPENSE.value
+                type_of_transaction == TypeOfTransaction.EXPENSE.value
                 and due_date != None
             ),
             unique=True,

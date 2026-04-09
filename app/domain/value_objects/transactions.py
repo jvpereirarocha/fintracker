@@ -8,6 +8,12 @@ class TypeOfTransaction(StrEnum):
     EXPENSE = "expense"
 
 
+class TransactionStatus(StrEnum):
+    RECEIVED = "received"
+    NOT_PAID = "not_paid"
+    ALREADY_PAID = "already_paid"
+
+
 @dataclass(frozen=True)
 class TransactionsFilter:
     username: str
