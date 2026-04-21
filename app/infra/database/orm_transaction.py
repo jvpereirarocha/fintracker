@@ -23,13 +23,13 @@ class Transaction:
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Float(asdecimal=True), nullable=False)
     type_of_transaction: Mapped[TypeOfTransaction] = mapped_column(String(20))
-    status: Mapped[TransactionStatus] = mapped_column(String(20), default=TransactionStatus.ALREADY_PAID)
     registration_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     due_date: Mapped[datetime] = mapped_column(Date, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     category_id: Mapped[int] = mapped_column(
         ForeignKey("category.category_id"), nullable=True
     )
+    status: Mapped[TransactionStatus] = mapped_column(String(20), default=TransactionStatus.ALREADY_PAID)
 
     @validates("due_date")
     def validate_due_date(self, key, value):
@@ -49,12 +49,9 @@ class Transaction:
         )
 
     __table_args__ = (
-        Index("desc_amount_idx", "description", "amount"),
-        Index("desc_amount_userid_idx", "description", "amount", "user_id"),
-        Index("amount_type_of_transaction_idx", "amount", "type_of_transaction"),
-        Index(
-            "type_of_transaction_date_idx", "type_of_transaction", "registration_date"
-        ),
+        Index("transactions_user_id_registration_date_idx", "user_id", "registration_date"),
+        Index("transactions_user_id_type_registration_date_idx", "user_id", "type_of_transaction", "registration_date"),
+        Index("transactions_category_id_idx", "category_id"),
         Index(
             "description_expense_due_date_idx",
             "description",
@@ -65,13 +62,5 @@ class Transaction:
                 and due_date != None
             ),
             unique=True,
-        ),
-        Index(
-            "description_amount_type_category_idx",
-            "description",
-            "amount",
-            "type_of_transaction",
-            "category_id",
-            postgresql_where=(category_id != None),
         ),
     )

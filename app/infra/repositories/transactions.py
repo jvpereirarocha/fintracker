@@ -1,3 +1,4 @@
+import calendar
 from datetime import date
 from decimal import Decimal
 from typing import Sequence
@@ -43,6 +44,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             description=transaction.description,
             amount=transaction.amount,
             type_of_transaction=transaction.type_of_transaction,  # type: ignore
+            transaction_status=transaction.status,  # type: ignore
             registration_date=transaction.registration_date,
             due_date=transaction.due_date,
             user_id=transaction.user_id,
@@ -57,14 +59,22 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         page_size: int,
     ) -> tuple[list[TransactionEntity], int]:
         query = select(Transaction).where(Transaction.user_id == user_id)
-        if filters.month:
+        if filters.month and filters.year:
+            last_day = calendar.monthrange(filters.year, filters.month)[1]
+            query = query.where(
+                Transaction.registration_date >= date(filters.year, filters.month, 1)
+            ).where(
+                Transaction.registration_date <= date(filters.year, filters.month, last_day)
+            )
+        elif filters.year:
+            query = query.where(
+                Transaction.registration_date >= date(filters.year, 1, 1)
+            ).where(
+                Transaction.registration_date <= date(filters.year, 12, 31)
+            )
+        elif filters.month:
             query = query.where(
                 extract("month", Transaction.registration_date) == filters.month
-            )
-
-        if filters.year:
-            query = query.where(
-                extract("year", Transaction.registration_date) == filters.year
             )
 
         if filters.description:
@@ -91,6 +101,11 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
                 Category, Transaction.category_id == Category.category_id
             ).where(func.lower(Category.name) == filters.category.lower())
 
+        if filters.status_of_transaction:
+            query = query.where(
+                Transaction.status == filters.status_of_transaction.value
+            )
+
         count_query = select(func.count()).select_from(query.subquery())
         total_result = self.session.execute(statement=count_query)
         total_count = total_result.scalar() or 0
@@ -110,6 +125,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
                 description=transaction.description,
                 amount=transaction.amount,
                 type_of_transaction=transaction.type_of_transaction,  # type: ignore
+                transaction_status=transaction.status,
                 registration_date=transaction.registration_date,
                 due_date=transaction.due_date,
                 user_id=transaction.user_id,
@@ -129,6 +145,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         transaction_dao.description = edit_transaction.description
         transaction_dao.amount = edit_transaction.amount
         transaction_dao.type_of_transaction = edit_transaction.type_of_transaction  # type: ignore
+        transaction_dao.status = edit_transaction.transaction_status  # type: ignore
         transaction_dao.registration_date = edit_transaction.registration_date
         transaction_dao.due_date = edit_transaction.due_date  # type: ignore
         transaction_dao.category_id = category_id
@@ -140,6 +157,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             description=transaction_dao.description,
             amount=transaction_dao.amount,
             type_of_transaction=transaction_dao.type_of_transaction,  # type: ignore
+            transaction_status=transaction_dao.status,  # type: ignore
             registration_date=transaction_dao.registration_date,
             due_date=transaction_dao.due_date,  # type: ignore
             user_id=transaction_dao.user_id,
@@ -155,6 +173,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             amount=new_transaction.amount,
             type_of_transaction=new_transaction.type_of_transaction,  # type: ignore
             registration_date=new_transaction.registration_date,
+            status=new_transaction.transaction_status,  # type: ignore
             due_date=new_transaction.due_date,  # type: ignore
             user_id=user_id,
             category_id=category_id,
@@ -168,6 +187,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             description=transaction_dao.description,
             amount=transaction_dao.amount,
             type_of_transaction=transaction_dao.type_of_transaction,  # type: ignore
+            transaction_status=transaction_dao.status, # type: ignore
             registration_date=transaction_dao.registration_date,
             due_date=transaction_dao.due_date,  # type: ignore
             user_id=transaction_dao.user_id,

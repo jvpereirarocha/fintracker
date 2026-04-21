@@ -5,7 +5,7 @@ import locale
 import re
 from typing import Optional
 
-from app.domain.value_objects.transactions import TypeOfTransaction
+from app.domain.value_objects.transactions import TypeOfTransaction, TransactionStatus
 
 
 @dataclass()
@@ -14,6 +14,7 @@ class TransactionEntity:
     description: str
     amount: Decimal
     type_of_transaction: TypeOfTransaction
+    transaction_status: TransactionStatus
     registration_date: date
     due_date: Optional[date]
     user_id: int
@@ -25,6 +26,7 @@ class SaveTransaction:
     description: str
     amount: Decimal
     type_of_transaction: str
+    transaction_status: str
     registration_date: datetime
     due_date: Optional[datetime]
     category: str

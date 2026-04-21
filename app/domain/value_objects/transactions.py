@@ -11,6 +11,7 @@ class TypeOfTransaction(StrEnum):
 class TransactionStatus(StrEnum):
     RECEIVED = "received"
     NOT_PAID = "not_paid"
+    PAYING = "paying"
     ALREADY_PAID = "already_paid"
 
 
@@ -22,3 +23,4 @@ class TransactionsFilter:
     description: Optional[str]
     category: Optional[str]
     type_of_transaction: Optional[TypeOfTransaction]
+    status_of_transaction: Optional[TransactionStatus]
