@@ -17,6 +17,7 @@ class TransactionResponse(BaseModel):
     description: str
     value: Decimal = Field(alias="amount", default="")
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
+    transaction_status: Literal["paying", "already_paid", "not_paid", "received"] = Field(alias="status")
     registration_date: date = Field(alias="registrationDate")
     due_date: Optional[date] = Field(alias="dueDate", default=None)
     category_id: Optional[int] = Field(alias="categoryId", default=None)
