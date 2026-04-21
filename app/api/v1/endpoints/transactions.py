@@ -41,6 +41,7 @@ async def get_all_transactions(
     description: Annotated[str | None, Query(alias="description")] = None,
     category: Annotated[str | None, Query(alias="category")] = None,
     type_of_transaction: Annotated[str | None, Query(alias="typeOfTransaction")] = None,
+    status_of_transaction: Annotated[str | None, Query(alias="status")] = None,
     items_per_page: Annotated[int, Query(alias="itemsPerPage")] = 10,
     page: Annotated[int, Query(alias="page")] = 1,
     use_case: ListTransactionsUseCase = Depends(get_list_transactions_use_case)
@@ -53,7 +54,8 @@ async def get_all_transactions(
         year=year,
         description=description,
         category=category,
-        type_of_transaction=type_of_transaction # type: ignore
+        type_of_transaction=type_of_transaction, # type: ignore
+        status_of_transaction=status_of_transaction, # type: ignore
     )
 
     return await use_case.execute(
