@@ -100,7 +100,8 @@ async def create_transaction(
         type_of_transaction=payload.type_of_transaction,
         registration_date=payload.registration_date,
         due_date=payload.due_date,
-        category=payload.category
+        category=payload.category,
+        transaction_status=payload.transaction_status,
     )
     
     return await use_case.execute(
@@ -127,7 +128,8 @@ async def update_transaction(
         type_of_transaction=payload.type_of_transaction,
         registration_date=payload.registration_date,
         due_date=payload.due_date,
-        category=payload.category
+        category=payload.category,
+        transaction_status=payload.transaction_status,
     )
     
     return await use_case.execute(

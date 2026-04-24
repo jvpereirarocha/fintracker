@@ -103,7 +103,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
 
         if filters.status_of_transaction:
             query = query.where(
-                Transaction.status == filters.status_of_transaction.value
+                Transaction.status == filters.status_of_transaction
             )
 
         count_query = select(func.count()).select_from(query.subquery())

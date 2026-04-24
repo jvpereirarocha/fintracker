@@ -35,7 +35,7 @@ def due_date_validator(registration_date, type_of_transaction, due_date, value):
     if (
         type_of_transaction
         and type_of_transaction == TypeOfTransaction.EXPENSE
-        and not due_date
+        and not value
     ):
         raise ValueError("A data de vencimento deve ser informada para despesas")
     return value
