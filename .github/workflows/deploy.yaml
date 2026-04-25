@@ -55,6 +55,22 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Debug git state
+        run: |
+          echo "=== pwd ==="
+          pwd
+          echo "=== ls -la ==="
+          ls -la
+          echo "=== ls -la .git ==="
+          ls -la .git || echo "No .git directory"
+          echo "=== whoami / id ==="
+          whoami
+          id
+          echo "=== git status ==="
+          git status || echo "git status failed"
+          echo "=== git log ==="
+          git log --oneline -5 || echo "git log failed"
  
       - name: Python Semantic Release
         id: semrel
