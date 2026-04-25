@@ -47,6 +47,9 @@ jobs:
         with:
           fetch-depth: 0  # commit analyze
           persist-credentials: false
+
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
  
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -61,8 +64,8 @@ jobs:
 
   build-and-push:
     runs-on: self-hosted
-    needs: test
-    if: needs.versioning.outputs.released == true
+    needs: versioning
+    if: needs.versioning.outputs.released == 'true'
     outputs:
       image_tag: ${{ needs.versioning.outputs.version }}
     steps:
@@ -83,9 +86,8 @@ jobs:
           context: .
           push: true
           tags: |
-            # ${{ env.DOCKER_IMAGE }}:${{ needs.versioning.outputs.version }}
-            # ${{ env.DOCKER_IMAGE }}:latest
-            jvrochadev/fintracker:test
+            ${{ env.DOCKER_IMAGE }}:${{ needs.versioning.outputs.version }}
+            ${{ env.DOCKER_IMAGE }}:latest
 
   deploy:
     runs-on: self-hosted
