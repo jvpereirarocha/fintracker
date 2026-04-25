@@ -14,6 +14,6 @@ echo "Backing up database..."
 # 1. Use -e PGPASSWORD=... to pass the password securely to the container
 # 2. Use -i instead of -it to prevent corrupting the .sql file with terminal characters
 # 3. Removed 'exec' so the script can continue to the final echo statement
-docker container exec -i -e PGPASSWORD="$POSTGRES_PASSWORD" dbfinanc-api pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" > backup.sql
+docker container exec -i -e PGPASSWORD="$POSTGRES_PASSWORD" dbfintracker pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" > backup.sql
 
 echo "Backup complete!"

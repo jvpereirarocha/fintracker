@@ -8,3 +8,4 @@ k8s/*-secrets.yaml
 .vscode
 backup.sql
 observability
+.pytest_cache

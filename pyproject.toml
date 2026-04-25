@@ -1,0 +1,39 @@
+[project]
+name = "fintracker"
+version = "0.1.0"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_message = "chore(release): v{version} [skip ci]"
+build_command = ""  # sem build step — o Docker cuida disso
+ 
+[tool.semantic_release.changelog]
+template_dir = "templates"
+changelog_file = "CHANGELOG.md"
+ 
+[tool.semantic_release.commit_parser_options]
+# Mapeia seus prefixos de commit para bumps de versão
+# feat → minor | fix → patch | BREAKING CHANGE → major
+# refactor, chore, style → nenhum bump (não geram release)
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "refactor",
+    "style",
+    "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "refactor"]
+ 
+[tool.semantic_release.remote]
+type = "github"
+token = { env = "GH_TOKEN" }
+ 
+[tool.semantic_release.publish]
+upload_to_vcs_release = true  # cria GitHub Release com changelog
