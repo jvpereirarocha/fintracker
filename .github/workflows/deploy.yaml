@@ -56,21 +56,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Debug git state
+      - name: Fix .git for Docker action compatibility
         run: |
-          echo "=== pwd ==="
-          pwd
-          echo "=== ls -la ==="
-          ls -la
-          echo "=== ls -la .git ==="
-          ls -la .git || echo "No .git directory"
-          echo "=== whoami / id ==="
-          whoami
-          id
-          echo "=== git status ==="
-          git status || echo "git status failed"
-          echo "=== git log ==="
-          git log --oneline -5 || echo "git log failed"
+          rm -f .git/config.worktree
+          git config --global --add safe.directory /github/workspace
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
  
       - name: Python Semantic Release
         id: semrel
