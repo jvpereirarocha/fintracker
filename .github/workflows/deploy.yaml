@@ -34,6 +34,9 @@ jobs:
   versioning:
     runs-on: self-hosted
     needs: test
+    concurrency:
+      group: release-${{ github.ref_name }}
+      cancel-in-progress: false
     permissions:
       contents: write
       id-token: write
@@ -45,28 +48,17 @@ jobs:
       - name: Code checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # commit analyze
-          persist-credentials: false
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-      - name: Mark workspace as safe
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
- 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Fix .git for Docker action compatibility
-        run: |
-          rm -f .git/config.worktree
-          git config --global --add safe.directory /github/workspace
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
- 
       - name: Python Semantic Release
         id: semrel
-        uses: python-semantic-release/python-semantic-release@v9.15.1
+        uses: python-semantic-release/python-semantic-release@v10.5.3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.RELEASE_TOKEN }}
+          verbosity: "2"
+          git_committer_name: "github-actions"
+          git_committer_email: "actions@users.noreply.github.com"
 
   build-and-push:
     runs-on: self-hosted
@@ -98,6 +90,7 @@ jobs:
   deploy:
     runs-on: self-hosted
     needs: [versioning, build-and-push]
+    if: needs.versioning.outputs.released == 'true'
     steps:
       - name: Update deployment image on Kubernetes cluster
         run: |
