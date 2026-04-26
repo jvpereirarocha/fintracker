@@ -2,7 +2,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
@@ -11,6 +13,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     ALGORITHM: str
     TOKEN_TYPE: str
+    GH_TOKEN: str
 
     @property
     def DATABASE_URL(self) -> str:
