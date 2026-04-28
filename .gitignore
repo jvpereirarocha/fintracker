@@ -9,3 +9,4 @@ k8s/*-secrets.yaml
 backup.sql
 observability
 .pytest_cache
+.ruff-cache
