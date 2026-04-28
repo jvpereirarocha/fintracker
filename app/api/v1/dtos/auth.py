@@ -15,13 +15,11 @@ class CreateUserDTO(BaseModel):
     email: EmailStr
     password: str
     confirm_password: str = Field(alias="confirmPassword")
-    
+
     @model_validator(mode="after")
     def validate_password(self) -> Self:
         if self.password != self.confirm_password:
-            raise PasswordsDontMatchException(
-                message="The passwords don't match"
-            )
+            raise PasswordsDontMatchException(message="The passwords don't match")
         return self
 
 

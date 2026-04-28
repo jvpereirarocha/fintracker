@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Literal, Optional
+from typing import Literal
 
 
 class TypeOfTransaction(StrEnum):
@@ -24,9 +24,9 @@ STATUS_OF_TRANSACTION = Literal["paying", "already_paid", "not_paid", "received"
 @dataclass(frozen=True)
 class TransactionsFilter:
     username: str
-    month: Optional[int]
-    year: Optional[int]
-    description: Optional[str]
-    category: Optional[str]
-    type_of_transaction: Optional[TypeOfTransaction]
-    status_of_transaction: Optional[TransactionStatus]
+    month: int | None
+    year: int | None
+    description: str | None
+    category: str | None
+    type_of_transaction: TypeOfTransaction | None
+    status_of_transaction: TransactionStatus | None

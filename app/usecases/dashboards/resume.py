@@ -2,7 +2,10 @@ from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
 
-from app.domain.abstractions.repositories import AbstractUserRepository, AbstractTransactionRepository
+from app.domain.abstractions.repositories import (
+    AbstractTransactionRepository,
+    AbstractUserRepository,
+)
 from app.domain.abstractions.usecases import AbstractUseCase
 from app.domain.exceptions.users import UserNotFoundException
 from app.domain.value_objects.dashboard import DashboardResume
@@ -33,7 +36,9 @@ class DashboardResumeUseCase(AbstractUseCase):
     @classmethod
     def get_monthly_interval_by_month_and_year(cls, month: int, year: int) -> tuple[date, date]:
         first_day_of_month: date = datetime(year=year, month=month, day=1).date()
-        last_day_of_month: date = first_day_of_month + relativedelta(months=1) - relativedelta(days=1)
+        last_day_of_month: date = (
+            first_day_of_month + relativedelta(months=1) - relativedelta(days=1)
+        )
         return first_day_of_month, last_day_of_month
 
     @classmethod
@@ -48,12 +53,13 @@ class DashboardResumeUseCase(AbstractUseCase):
         month: int | None = None,
         year: int | None = None,
     ) -> DashboardResume:
-
         user_id = self.user_repo.get_user_id_by_username(username=username)
         if not user_id:
             raise UserNotFoundException(f"User {username} not found")
         month, year = self.get_month_and_year_by_params(month=month, year=year)
-        first_day_of_month, last_day_of_month = self.get_monthly_interval_by_month_and_year(month=month, year=year)
+        first_day_of_month, last_day_of_month = self.get_monthly_interval_by_month_and_year(
+            month=month, year=year
+        )
         first_day_of_year, last_day_of_year = self.get_yearly_interval_year(year=year)
         month_dashboard_resume = self.transaction_repo.get_sum_of_transactions_by_interval(
             user_id=user_id,

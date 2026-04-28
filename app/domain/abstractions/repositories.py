@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Protocol, Any
+from typing import Any, Protocol
 
 from app.domain.entities.categories import CategoryEntity, PartialUpdateCategory
 from app.domain.entities.users import UserEntity
@@ -12,9 +12,8 @@ class AbstractRepository(Protocol):
 
 
 class AbstractTransactionRepository(AbstractRepository):
-    
     def fetch_all(self, *args, **kwargs) -> Any: ...
-    
+
     def fetch_one(self, *args, **kwargs) -> Any: ...
 
     def save(self, *args, **kwargs) -> Any: ...
@@ -34,7 +33,6 @@ class AbstractTransactionRepository(AbstractRepository):
 
 
 class AbstractUserRepository(AbstractRepository):
-    
     def get_user_id_by_username(self, username: str) -> int | None: ...
 
     def save(self, user: UserEntity) -> SavedUser: ...
@@ -45,7 +43,6 @@ class AbstractUserRepository(AbstractRepository):
 
 
 class AbstractCategoryRepository(AbstractRepository):
-    
     def get_category_id_by_name(self, name: str) -> int: ...
 
     def get_category_by_id(self, category_id: int) -> CategoryEntity | None: ...
@@ -59,4 +56,3 @@ class AbstractCategoryRepository(AbstractRepository):
     def update(self, category_id: int, edit_category: PartialUpdateCategory) -> CategoryEntity: ...
 
     def delete(self, category_id: int) -> None: ...
-

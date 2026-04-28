@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session as SQLAlchemySession
@@ -31,9 +31,7 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
         return category
 
     def get_category_id_by_name(self, name: str) -> int:
-        query = select(Category.category_id).where(
-            func.lower(Category.name) == name.lower()
-        )
+        query = select(Category.category_id).where(func.lower(Category.name) == name.lower())
         result = self.session.execute(statement=query)
         return result.scalar() or 0
 
@@ -58,11 +56,7 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
         count_query = select(func.count()).select_from(query.subquery())
         total_result = self.session.execute(statement=count_query)
         total_count = total_result.scalar() or 0
-        query = (
-            query.order_by(Category.category_id.asc())
-            .limit(limit=limit)
-            .offset(offset=offset)
-        )
+        query = query.order_by(Category.category_id.asc()).limit(limit=limit).offset(offset=offset)
         results = self.session.execute(statement=query)
         categories: Sequence[Category] = results.scalars().all()
         category_entities = [
@@ -90,9 +84,7 @@ class AdapterCategoryRepo(AbstractCategoryRepository):
             description=category.description,
         )
 
-    def update(
-        self, category_id: int, edit_category: PartialUpdateCategory
-    ) -> CategoryEntity:
+    def update(self, category_id: int, edit_category: PartialUpdateCategory) -> CategoryEntity:
         category = self._get_category_dao(category_id=category_id)
         category_name = edit_category.name or category.name
         category.name = category_name.capitalize()

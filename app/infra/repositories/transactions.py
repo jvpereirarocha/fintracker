@@ -1,7 +1,7 @@
 import calendar
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Sequence
 
 from sqlalchemy import case, extract, func, select
 from sqlalchemy.orm import Session as SQLAlchemySession
@@ -63,59 +63,37 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             last_day = calendar.monthrange(filters.year, filters.month)[1]
             query = query.where(
                 Transaction.registration_date >= date(filters.year, filters.month, 1)
-            ).where(
-                Transaction.registration_date <= date(filters.year, filters.month, last_day)
-            )
+            ).where(Transaction.registration_date <= date(filters.year, filters.month, last_day))
         elif filters.year:
-            query = query.where(
-                Transaction.registration_date >= date(filters.year, 1, 1)
-            ).where(
+            query = query.where(Transaction.registration_date >= date(filters.year, 1, 1)).where(
                 Transaction.registration_date <= date(filters.year, 12, 31)
             )
         elif filters.month:
-            query = query.where(
-                extract("month", Transaction.registration_date) == filters.month
-            )
+            query = query.where(extract("month", Transaction.registration_date) == filters.month)
 
         if filters.description:
-            query = query.where(
-                Transaction.description.ilike(f"%{filters.description}%")
-            )
-        if (
-            filters.type_of_transaction
-            and filters.type_of_transaction == TypeOfTransaction.INCOME
-        ):
-            query = query.where(
-                Transaction.type_of_transaction == TypeOfTransaction.INCOME.value
-            )
+            query = query.where(Transaction.description.ilike(f"%{filters.description}%"))
+        if filters.type_of_transaction and filters.type_of_transaction == TypeOfTransaction.INCOME:
+            query = query.where(Transaction.type_of_transaction == TypeOfTransaction.INCOME.value)
         elif (
-            filters.type_of_transaction
-            and filters.type_of_transaction == TypeOfTransaction.EXPENSE
+            filters.type_of_transaction and filters.type_of_transaction == TypeOfTransaction.EXPENSE
         ):
-            query = query.where(
-                Transaction.type_of_transaction == TypeOfTransaction.EXPENSE.value
-            )
+            query = query.where(Transaction.type_of_transaction == TypeOfTransaction.EXPENSE.value)
 
         if filters.category:
-            query = query.join(
-                Category, Transaction.category_id == Category.category_id
-            ).where(func.lower(Category.name) == filters.category.lower())
+            query = query.join(Category, Transaction.category_id == Category.category_id).where(
+                func.lower(Category.name) == filters.category.lower()
+            )
 
         if filters.status_of_transaction:
-            query = query.where(
-                Transaction.status == filters.status_of_transaction
-            )
+            query = query.where(Transaction.status == filters.status_of_transaction)
 
         count_query = select(func.count()).select_from(query.subquery())
         total_result = self.session.execute(statement=count_query)
         total_count = total_result.scalar() or 0
 
         offset = (page - 1) * page_size
-        query = (
-            query.order_by(Transaction.registration_date.desc())
-            .limit(page_size)
-            .offset(offset)
-        )
+        query = query.order_by(Transaction.registration_date.desc()).limit(page_size).offset(offset)
 
         result = self.session.execute(statement=query)
         transactions: Sequence[Transaction] = result.scalars().all()
@@ -167,7 +145,6 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
     def save(
         self, new_transaction: SaveTransaction, user_id: int, category_id: int
     ) -> TransactionEntity:
-
         transaction_dao = Transaction(
             description=new_transaction.description,
             amount=new_transaction.amount,
@@ -187,7 +164,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             description=transaction_dao.description,
             amount=transaction_dao.amount,
             type_of_transaction=transaction_dao.type_of_transaction,  # type: ignore
-            transaction_status=transaction_dao.status, # type: ignore
+            transaction_status=transaction_dao.status,  # type: ignore
             registration_date=transaction_dao.registration_date,
             due_date=transaction_dao.due_date,  # type: ignore
             user_id=transaction_dao.user_id,
@@ -206,7 +183,6 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         start_date: date,
         end_date: date,
     ) -> DashboardValues:
-
         result = self.session.execute(
             select(
                 func.sum(

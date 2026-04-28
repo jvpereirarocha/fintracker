@@ -1,16 +1,24 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from typing import Literal
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from app.api.v1.dtos.pagination import Pagination
 from app.domain.business_logic.conversor import (
+    clean_brl_format_to_decimal,
     format_date_to_brazilian_date_text_format,
     format_decimal_to_brl_format,
-    clean_brl_format_to_decimal,
     validate_date_format,
     validate_if_due_date_was_provided_for_expense,
-    validate_transaction_status_by_type_of_transaction
+    validate_transaction_status_by_type_of_transaction,
 )
 from app.domain.value_objects.transactions import STATUS_OF_TRANSACTION
 
@@ -22,8 +30,8 @@ class TransactionResponse(BaseModel):
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
     transaction_status: STATUS_OF_TRANSACTION = Field(alias="status")
     registration_date: date = Field(alias="registrationDate")
-    due_date: Optional[date] = Field(alias="dueDate", default=None)
-    category_id: Optional[int] = Field(alias="categoryId", default=None)
+    due_date: date | None = Field(alias="dueDate", default=None)
+    category_id: int | None = Field(alias="categoryId", default=None)
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -39,7 +47,7 @@ class TransactionResponse(BaseModel):
     def serialize_due_date(self, date_reference: date | None) -> str:
         if date_reference:
             return format_date_to_brazilian_date_text_format(date_reference=date_reference)
-        
+
         return ""
 
 
@@ -52,12 +60,11 @@ class SaveTransactionRequestDTO(BaseModel):
     amount: Decimal
     type_of_transaction: Literal["income", "expense"] = Field(alias="typeOfTransaction")
     registration_date: datetime = Field(alias="registrationDate")
-    due_date: Optional[datetime] = Field(alias="dueDate", default=None)
+    due_date: datetime | None = Field(alias="dueDate", default=None)
     category: str = Field(alias="category")
     transaction_status: STATUS_OF_TRANSACTION = Field(alias="status")
 
     model_config = ConfigDict(from_attributes=True)
-
 
     @field_validator("amount", mode="before")
     @classmethod
@@ -66,23 +73,22 @@ class SaveTransactionRequestDTO(BaseModel):
 
     @field_validator("registration_date", mode="before")
     @classmethod
-    def validate_registration_date(cls, registration_date: str) -> Optional[date]:
+    def validate_registration_date(cls, registration_date: str) -> date | None:
         return validate_date_format(date_reference=registration_date)
 
     @field_validator("due_date", mode="before")
     @classmethod
-    def validate_due_date(cls, due_date: str = "") -> Optional[date]:
+    def validate_due_date(cls, due_date: str = "") -> date | None:
         return validate_date_format(date_reference=due_date)
-    
+
     @model_validator(mode="after")
     def validate_transaction_status(self) -> "SaveTransactionRequestDTO":
         validate_transaction_status_by_type_of_transaction(
-            type_of_transaction=self.type_of_transaction,
-            transaction_status=self.transaction_status
+            type_of_transaction=self.type_of_transaction, transaction_status=self.transaction_status
         )
         validate_if_due_date_was_provided_for_expense(
             type_of_transaction=self.type_of_transaction,
             due_date=self.due_date,
         )
-        
+
         return self

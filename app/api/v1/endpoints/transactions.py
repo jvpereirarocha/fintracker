@@ -1,27 +1,30 @@
 from http import HTTPStatus
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query, Request
 
+from app.api.dependencies.base import get_current_user
 from app.api.dependencies.transactions import (
     get_create_transaction_use_case,
+    get_delete_transaction_use_case,
     get_edit_transaction_use_case,
     get_list_transactions_use_case,
-    get_delete_transaction_use_case,
     get_one_transactions_use_case,
 )
 from app.api.v1.dtos.transactions import (
-    SaveTransactionRequestDTO,
     PaginatedTransactions,
-    TransactionResponse
+    SaveTransactionRequestDTO,
+    TransactionResponse,
 )
-from app.api.dependencies.base import get_current_user
 from app.domain.entities.transactions import SaveTransaction
 from app.domain.value_objects.transactions import TransactionsFilter
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
-from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
-from app.usecases.transactions.list_transactions import ListTransactionsUseCase, GetOneTransactionUseCase
 from app.usecases.transactions.delete_transaction import DeleteTransactionUseCase
-
+from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
+from app.usecases.transactions.list_transactions import (
+    GetOneTransactionUseCase,
+    ListTransactionsUseCase,
+)
 
 transactions_router = APIRouter(
     prefix="/transactions",
@@ -44,7 +47,7 @@ async def get_all_transactions(
     status_of_transaction: Annotated[str | None, Query(alias="status")] = None,
     items_per_page: Annotated[int, Query(alias="itemsPerPage")] = 10,
     page: Annotated[int, Query(alias="page")] = 1,
-    use_case: ListTransactionsUseCase = Depends(get_list_transactions_use_case)
+    use_case: ListTransactionsUseCase = Depends(get_list_transactions_use_case),
 ):
     current_user = request.state.user
 
@@ -54,8 +57,8 @@ async def get_all_transactions(
         year=year,
         description=description,
         category=category,
-        type_of_transaction=type_of_transaction, # type: ignore
-        status_of_transaction=status_of_transaction, # type: ignore
+        type_of_transaction=type_of_transaction,  # type: ignore
+        status_of_transaction=status_of_transaction,  # type: ignore
     )
 
     return await use_case.execute(
@@ -73,7 +76,7 @@ async def get_all_transactions(
 async def fetch_one_transaction(
     request: Request,
     transaction_id: int,
-    use_case: GetOneTransactionUseCase = Depends(get_one_transactions_use_case)
+    use_case: GetOneTransactionUseCase = Depends(get_one_transactions_use_case),
 ):
     current_user = request.state.user
 
@@ -91,7 +94,7 @@ async def fetch_one_transaction(
 async def create_transaction(
     request: Request,
     payload: SaveTransactionRequestDTO,
-    use_case: CreateTransactionUseCase = Depends(get_create_transaction_use_case)
+    use_case: CreateTransactionUseCase = Depends(get_create_transaction_use_case),
 ):
     current_user = request.state.user
     new_transaction = SaveTransaction(
@@ -103,7 +106,7 @@ async def create_transaction(
         category=payload.category,
         transaction_status=payload.transaction_status,
     )
-    
+
     return await use_case.execute(
         new_transaction=new_transaction,
         username=current_user.sub,
@@ -119,7 +122,7 @@ async def update_transaction(
     request: Request,
     transaction_id: int,
     payload: SaveTransactionRequestDTO,
-    use_case: UpdateTransactionUseCase = Depends(get_edit_transaction_use_case)
+    use_case: UpdateTransactionUseCase = Depends(get_edit_transaction_use_case),
 ):
     current_user = request.state.user
     edit_transaction = SaveTransaction(
@@ -131,12 +134,11 @@ async def update_transaction(
         category=payload.category,
         transaction_status=payload.transaction_status,
     )
-    
+
     return await use_case.execute(
         transaction_id=transaction_id,
         edit_transaction=edit_transaction,
         username=current_user.sub,
-
     )
 
 
@@ -147,10 +149,10 @@ async def update_transaction(
 async def delete_transaction(
     request: Request,
     transaction_id: int,
-    use_case: DeleteTransactionUseCase = Depends(get_delete_transaction_use_case)
+    use_case: DeleteTransactionUseCase = Depends(get_delete_transaction_use_case),
 ):
     current_user = request.state.user
-    
+
     return await use_case.execute(
         transaction_id=transaction_id,
         username=current_user.sub,

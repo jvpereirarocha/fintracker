@@ -2,8 +2,8 @@ from app.domain.abstractions.repositories import AbstractCategoryRepository
 from app.domain.abstractions.usecases import AbstractUseCase
 from app.domain.entities.base import PagedResponse
 from app.domain.entities.categories import CategoryEntity
-from app.domain.value_objects.pagination import PaginationParams
 from app.domain.exceptions.categories import CategoryNotFoundException
+from app.domain.value_objects.pagination import PaginationParams
 
 
 class ListCategoriesUseCase(AbstractUseCase):
@@ -14,7 +14,6 @@ class ListCategoriesUseCase(AbstractUseCase):
         self,
         pagination: PaginationParams,
     ) -> PagedResponse[CategoryEntity]:
-        
         categories, total = self.category_repo.fetch_all(
             limit=pagination.page_size,
             offset=pagination.offset,
@@ -36,13 +35,10 @@ class GetOneCategoryUseCase(AbstractUseCase):
         self,
         category_id: int,
     ) -> CategoryEntity | None:
-        
         category = self.category_repo.get_category_by_id(
             category_id=category_id,
         )
         if not category:
-            raise CategoryNotFoundException(
-                message=f"Category with id {category_id} not found"
-            )
-        
+            raise CategoryNotFoundException(message=f"Category with id {category_id} not found")
+
         return category

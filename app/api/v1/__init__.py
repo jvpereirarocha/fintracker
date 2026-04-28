@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints.users import users_router
+from app.api.v1.endpoints.categories import categories_router
 from app.api.v1.endpoints.dashboards import dashboard_router
 from app.api.v1.endpoints.transactions import transactions_router
-from app.api.v1.endpoints.categories import categories_router
+from app.api.v1.endpoints.users import users_router
 
 api_v1_router = APIRouter(
     prefix="/api/v1",

@@ -7,5 +7,5 @@ class PasswordHandlerAbstraction(ABC):
         pass
 
     @abstractmethod
-    def verify_password(self,raw_password: str, hashed_password: bytes) -> bool:
+    def verify_password(self, raw_password: str, hashed_password: bytes) -> bool:
         pass

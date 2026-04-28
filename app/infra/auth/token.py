@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import Request
@@ -21,19 +21,15 @@ class TokenProvider(TokenProviderAbstraction):
             "sub": username,
             "name": f"{username}'s token",
             "exp": expiration_date,
-            "iat": datetime.now(tz=timezone.utc),
+            "iat": datetime.now(tz=UTC),
         }
 
-    def encode_token(
-        self, username: str, token_expiration: timedelta | None = None
-    ) -> PublicToken:
+    def encode_token(self, username: str, token_expiration: timedelta | None = None) -> PublicToken:
         if not token_expiration:
             token_expiration = timedelta(minutes=45)
 
-        expiration_date = datetime.now(tz=timezone.utc) + token_expiration
-        data = self._build_token_payload(
-            username=username, expiration_date=expiration_date
-        )
+        expiration_date = datetime.now(tz=UTC) + token_expiration
+        data = self._build_token_payload(username=username, expiration_date=expiration_date)
         encoded_jwt = jwt.encode(
             payload=data,
             key=settings.JWT_SECRET_KEY,
@@ -44,17 +40,13 @@ class TokenProvider(TokenProviderAbstraction):
     def decode_token(self, request: Request) -> JWTPayload:
         auth = request.headers.get("Authorization")
         if not auth:
-            raise AuthorizationHeaderMissingException(
-                message="Authorization header is missing"
-            )
+            raise AuthorizationHeaderMissingException(message="Authorization header is missing")
         try:
             token = auth.split()[1]
             payload = jwt.decode(
                 jwt=token, key=settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM]
             )
-            token_is_expired = self._token_is_expired(
-                expiration_time=payload.get("exp")
-            )
+            token_is_expired = self._token_is_expired(expiration_time=payload.get("exp"))
             if token_is_expired:
                 raise TokenExpiredException(message="Token is expired")
             return JWTPayload(sub=payload["sub"], exp=payload["exp"])

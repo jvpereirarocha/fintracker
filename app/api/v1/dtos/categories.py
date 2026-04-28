@@ -7,7 +7,7 @@ class CategoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     category_id: int = Field(serialization_alias="categoryId")
-    name: str 
+    name: str
     description: str
 
 

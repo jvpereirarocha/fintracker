@@ -8,6 +8,7 @@ class SaveCategory:
     description: str
     updated_at: datetime = datetime.now()
 
+
 @dataclass(frozen=True)
 class PartialUpdateCategory:
     name: str | None

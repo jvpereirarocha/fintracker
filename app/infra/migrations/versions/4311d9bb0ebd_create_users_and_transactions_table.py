@@ -1,22 +1,21 @@
 """create users and transactions table
 
 Revision ID: 4311d9bb0ebd
-Revises: 
+Revises:
 Create Date: 2024-07-23 00:06:38.255941
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "4311d9bb0ebd"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -27,31 +26,19 @@ def upgrade() -> None:
         sa.Column("username", sa.String(), nullable=False),
         sa.Column("password", sa.String(), nullable=False),
         sa.Column("email", sa.String(), nullable=False),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("user_id"),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("username"),
     )
-    op.create_index(
-        "email_created_at_idx", "users", ["email", "created_at"], unique=False
-    )
+    op.create_index("email_created_at_idx", "users", ["email", "created_at"], unique=False)
     op.create_index("email_pass_idx", "users", ["email", "password"], unique=False)
-    op.create_index(
-        "email_updated_at_idx", "users", ["email", "updated_at"], unique=False
-    )
-    op.create_index(
-        "user_created_at_idx", "users", ["username", "created_at"], unique=False
-    )
-    op.create_index(
-        "user_email_pass_idx", "users", ["username", "email", "password"], unique=False
-    )
+    op.create_index("email_updated_at_idx", "users", ["email", "updated_at"], unique=False)
+    op.create_index("user_created_at_idx", "users", ["username", "created_at"], unique=False)
+    op.create_index("user_email_pass_idx", "users", ["username", "email", "password"], unique=False)
     op.create_index("user_pass_idx", "users", ["username", "password"], unique=False)
-    op.create_index(
-        "user_updated_at_idx", "users", ["username", "updated_at"], unique=False
-    )
+    op.create_index("user_updated_at_idx", "users", ["username", "updated_at"], unique=False)
     op.create_table(
         "transactions",
         sa.Column("transaction_id", sa.Integer(), nullable=False),
@@ -72,9 +59,7 @@ def upgrade() -> None:
         ["amount", "type_of_transaction"],
         unique=False,
     )
-    op.create_index(
-        "desc_amount_idx", "transactions", ["description", "amount"], unique=False
-    )
+    op.create_index("desc_amount_idx", "transactions", ["description", "amount"], unique=False)
     op.create_index(
         "desc_amount_userid_idx",
         "transactions",
