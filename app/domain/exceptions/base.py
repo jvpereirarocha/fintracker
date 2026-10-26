@@ -6,6 +6,7 @@ class ExceptionType(StrEnum):
     UNAUTHORIZED = auto()
     FORBIDDEN = auto()
     NOT_FOUND = auto()
+    CONFLICT = auto()
     INTERNAL_SERVER_ERROR = auto()
 
 
