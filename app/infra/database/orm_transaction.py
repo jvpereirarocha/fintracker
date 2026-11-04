@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, Float, ForeignKey, Index, String
+from sqlalchemy import Date, Float, ForeignKey, Index, String, text
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
@@ -53,12 +53,11 @@ class Transaction:
         Index("transactions_category_id_idx", "category_id"),
         Index(
             "description_expense_due_date_idx",
+            "user_id",
             "description",
             "type_of_transaction",
             "due_date",
-            postgresql_where=(
-                type_of_transaction == TypeOfTransaction.EXPENSE.value and due_date != None
-            ),
+            postgresql_where=text("type_of_transaction = 'expense'"),
             unique=True,
         ),
     )

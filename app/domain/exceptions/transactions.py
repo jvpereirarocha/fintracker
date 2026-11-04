@@ -9,7 +9,7 @@ class TransactionNotFoundException(BaseDomainException):
 class TransactionAlreadyExistsException(BaseDomainException):
     def __init__(self, message: str = "Transaction already exists"):
         super().__init__(
-            message=message, name="TransactionAlreadyExists", type=ExceptionType.BAD_REQUEST
+            message=message, name="TransactionAlreadyExists", type=ExceptionType.CONFLICT
         )
 
 

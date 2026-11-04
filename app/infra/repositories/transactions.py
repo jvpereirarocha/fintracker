@@ -4,10 +4,12 @@ from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import case, extract, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as SQLAlchemySession
 
 from app.domain.abstractions.repositories import AbstractTransactionRepository
 from app.domain.entities.transactions import SaveTransaction, TransactionEntity
+from app.domain.exceptions.transactions import TransactionAlreadyExistsException
 from app.domain.value_objects.dashboard import DashboardValues
 from app.domain.value_objects.transactions import TransactionsFilter, TypeOfTransaction
 from app.infra.database.orm_category import Category
@@ -31,6 +33,19 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         result = self.session.execute(statement=query)
         transaction_dao = result.scalar_one()
         return transaction_dao
+
+    def _commit(self) -> None:
+        """
+        Commits the session, translating unique constraint violations
+        (description_expense_due_date_idx) into a domain exception
+        """
+        try:
+            self.session.commit()
+        except IntegrityError as exc:
+            self.session.rollback()
+            raise TransactionAlreadyExistsException(
+                message="Já existe uma despesa com essa descrição e data de vencimento"
+            ) from exc
 
     def exists(self, transaction_id: int) -> bool:
         query = select(Transaction).where(Transaction.transaction_id == transaction_id)
@@ -128,7 +143,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         transaction_dao.due_date = edit_transaction.due_date  # type: ignore
         transaction_dao.category_id = category_id
 
-        self.session.commit()
+        self._commit()
         self.session.refresh(transaction_dao)
         return TransactionEntity(
             transaction_id=transaction_dao.transaction_id,
@@ -156,7 +171,7 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             category_id=category_id,
         )
         self.session.add(transaction_dao)
-        self.session.commit()
+        self._commit()
         self.session.refresh(transaction_dao)
 
         return TransactionEntity(

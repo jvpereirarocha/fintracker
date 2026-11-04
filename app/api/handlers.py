@@ -19,6 +19,8 @@ def get_status_code_by_exception_type(exception_type: ExceptionType) -> int:
             return status.HTTP_403_FORBIDDEN
         case ExceptionType.NOT_FOUND:
             return status.HTTP_404_NOT_FOUND
+        case ExceptionType.CONFLICT:
+            return status.HTTP_409_CONFLICT
         case ExceptionType.INTERNAL_SERVER_ERROR:
             return status.HTTP_500_INTERNAL_SERVER_ERROR
         case _:
