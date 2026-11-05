@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.2.0 (2026-11-05)
+
+### Features
+
+- Add orderBy to transaction listing and break ties by id
+  ([`3daf525`](https://github.com/jvpereirarocha/fintracker/commit/3daf525ef57279aa92a24b5164a86f106bbb40f1))
+
+
 ## v1.1.0 (2026-11-04)
 
 ### Bug Fixes
