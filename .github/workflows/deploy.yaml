@@ -92,6 +92,13 @@ jobs:
     needs: [versioning, build-and-push]
     if: needs.versioning.outputs.released == 'true'
     steps:
+      # The runner image (myoung34/github-runner) doesn't ship kubectl. Without a kubeconfig,
+      # kubectl uses the runner pod's service account (github-runner-sa)
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.34.5 # same minor as the k3s server
+
       - name: Update deployment image on Kubernetes cluster
         run: |
           kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
