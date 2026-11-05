@@ -11,7 +11,11 @@ from app.domain.abstractions.repositories import AbstractTransactionRepository
 from app.domain.entities.transactions import SaveTransaction, TransactionEntity
 from app.domain.exceptions.transactions import TransactionAlreadyExistsException
 from app.domain.value_objects.dashboard import DashboardValues
-from app.domain.value_objects.transactions import TransactionsFilter, TypeOfTransaction
+from app.domain.value_objects.transactions import (
+    TransactionsFilter,
+    TransactionsOrder,
+    TypeOfTransaction,
+)
 from app.infra.database.orm_category import Category
 from app.infra.database.orm_transaction import Transaction
 
@@ -108,7 +112,15 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
         total_count = total_result.scalar() or 0
 
         offset = (page - 1) * page_size
-        query = query.order_by(Transaction.registration_date.desc()).limit(page_size).offset(offset)
+        # transaction_id breaks ties, otherwise rows sharing a date could repeat or be skipped
+        # across pages
+        if filters.order_by == TransactionsOrder.ID:
+            query = query.order_by(Transaction.transaction_id.desc())
+        else:
+            query = query.order_by(
+                Transaction.registration_date.desc(), Transaction.transaction_id.desc()
+            )
+        query = query.limit(page_size).offset(offset)
 
         result = self.session.execute(statement=query)
         transactions: Sequence[Transaction] = result.scalars().all()

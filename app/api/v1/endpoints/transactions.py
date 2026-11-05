@@ -17,7 +17,7 @@ from app.api.v1.dtos.transactions import (
     TransactionResponse,
 )
 from app.domain.entities.transactions import SaveTransaction
-from app.domain.value_objects.transactions import TransactionsFilter
+from app.domain.value_objects.transactions import TransactionsFilter, TransactionsOrder
 from app.usecases.transactions.create_transaction import CreateTransactionUseCase
 from app.usecases.transactions.delete_transaction import DeleteTransactionUseCase
 from app.usecases.transactions.edit_transaction import UpdateTransactionUseCase
@@ -45,6 +45,9 @@ async def get_all_transactions(
     category: Annotated[str | None, Query(alias="category")] = None,
     type_of_transaction: Annotated[str | None, Query(alias="typeOfTransaction")] = None,
     status_of_transaction: Annotated[str | None, Query(alias="status")] = None,
+    order_by: Annotated[TransactionsOrder, Query(alias="orderBy")] = (
+        TransactionsOrder.REGISTRATION_DATE
+    ),
     items_per_page: Annotated[int, Query(alias="itemsPerPage")] = 10,
     page: Annotated[int, Query(alias="page")] = 1,
     use_case: ListTransactionsUseCase = Depends(get_list_transactions_use_case),
@@ -59,6 +62,7 @@ async def get_all_transactions(
         category=category,
         type_of_transaction=type_of_transaction,  # type: ignore
         status_of_transaction=status_of_transaction,  # type: ignore
+        order_by=order_by,
     )
 
     return await use_case.execute(

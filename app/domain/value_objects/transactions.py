@@ -18,6 +18,14 @@ class TransactionStatus(StrEnum):
 EXPENSE_STATUS_OF_TRANSACTIONS = ["paying", "already_paid", "not_paid"]
 INCOME_STATUS_OF_TRANSACTIONS = ["received"]
 
+
+class TransactionsOrder(StrEnum):
+    """How GET /transactions/ sorts its results, always newest first"""
+
+    REGISTRATION_DATE = "registrationDate"
+    ID = "id"  # creation order, since transaction ids are sequential
+
+
 STATUS_OF_TRANSACTION = Literal["paying", "already_paid", "not_paid", "received"]
 
 
@@ -30,3 +38,4 @@ class TransactionsFilter:
     category: str | None
     type_of_transaction: TypeOfTransaction | None
     status_of_transaction: TransactionStatus | None
+    order_by: TransactionsOrder = TransactionsOrder.REGISTRATION_DATE
