@@ -1,0 +1,16 @@
+# Manifests synced by ArgoCD (Application "fintracker" in cicd-system).
+# app-secrets.yaml is git-ignored and created by hand, so it is not listed here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - app-configmaps.yaml
+  - app-deployment.yaml
+  - app-service.yaml
+
+images:
+  - name: jvrochadev/fintracker
+    # Updated by python-semantic-release on each release (version_variables in pyproject.toml).
+    # Keep it quoted so YAML reads it as a string.
+    newTag: "1.2.0"

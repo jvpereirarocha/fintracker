@@ -6,9 +6,6 @@ on:
 
 env:
   DOCKER_IMAGE: jvrochadev/fintracker
-  DEPLOYMENT_NAME: fintracker-deployment
-  NAMESPACE: fintracker-dev
-  CONTAINER_NAME: fintracker-web
 
 jobs:
   test:
@@ -60,6 +57,8 @@ jobs:
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
 
+  # Deployment is done by ArgoCD: the release commit updates newTag in
+  # k8s/kustomization.yaml and ArgoCD syncs it to the cluster.
   build-and-push:
     runs-on: self-hosted
     needs: versioning
@@ -86,31 +85,3 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ needs.versioning.outputs.version }}
             ${{ env.DOCKER_IMAGE }}:latest
-
-  deploy:
-    runs-on: self-hosted
-    needs: [versioning, build-and-push]
-    if: needs.versioning.outputs.released == 'true'
-    steps:
-      # The runner image (myoung34/github-runner) doesn't ship kubectl. Without a kubeconfig,
-      # kubectl uses the runner pod's service account (github-runner-sa)
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: v1.34.5 # same minor as the k3s server
-
-      - name: Update deployment image on Kubernetes cluster
-        run: |
-          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
-            ${{ env.CONTAINER_NAME }}=${{ env.DOCKER_IMAGE }}:${{ needs.versioning.outputs.version }} \
-            -n ${{ env.NAMESPACE }}
-
-      - name: Waiting rollout
-        run: |
-          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
-            -n ${{ env.NAMESPACE }} \
-            --timeout=120s
-
-      - name: Confirm deployed version
-        run: |
-          echo "✅ Fintracker v${{ needs.versioning.outputs.version }} deployed successfully on Kubernetes cluster!"
