@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.4.0 (2026-11-09)
+
+### Bug Fixes
+
+- Keep SQL parameter values out of error logs
+  ([`a369942`](https://github.com/jvpereirarocha/fintracker/commit/a369942d8615fcfa5ea762212d7a601191fab270))
+
+### Features
+
+- Log one JSON line per API request
+  ([`40075fe`](https://github.com/jvpereirarocha/fintracker/commit/40075feb8d2450ee3761a566db7ff745422d69a9))
+
+
 ## v1.3.0 (2026-11-09)
 
 ### Bug Fixes
