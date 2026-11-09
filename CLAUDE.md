@@ -4,6 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+**Makefile shortcuts** (`make help` lists them all):
+```bash
+make up          # docker compose up --build -d (API + database)
+make down        # stop them
+make logs        # follow API logs
+make migrate     # alembic upgrade head inside the running API container
+make test        # throwaway Postgres + migrations + pytest in Docker, torn down afterwards
+make test ARGS="-v -k dashboard"   # pass extra pytest flags (default: --tb=short -q)
+make test-local  # pytest on the host
+make lint / make format / make typecheck
+```
+`make test` uses `docker-compose.test.yaml` and `Dockerfile.test`, with fixed test-only credentials (no `.env` needed). Its exit code is pytest's, so a failing test fails the command.
+
 **Run the app (Docker):**
 ```bash
 docker compose up --build

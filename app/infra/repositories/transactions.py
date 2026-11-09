@@ -1,7 +1,7 @@
 import calendar
 from collections.abc import Sequence
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import case, extract, func, select
 from sqlalchemy.exc import IntegrityError
@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session as SQLAlchemySession
 from app.domain.abstractions.repositories import AbstractTransactionRepository
 from app.domain.entities.transactions import SaveTransaction, TransactionEntity
 from app.domain.exceptions.transactions import TransactionAlreadyExistsException
-from app.domain.value_objects.dashboard import DashboardValues
+from app.domain.value_objects.dashboard import CategoryAmount, DashboardValues, MonthlyTotals
 from app.domain.value_objects.transactions import (
     TransactionsFilter,
     TransactionsOrder,
@@ -246,3 +246,68 @@ class AdapterTransactionRepo(AbstractTransactionRepository):
             total_expense=total_expense,
             total_income=total_income,
         )
+
+    @staticmethod
+    def _to_cents(value: Decimal | float | None) -> Decimal:
+        """Float column sums carry binary noise (1200.4999...), so round them to cents"""
+        return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def get_monthly_totals_by_year(self, user_id: int, year: int) -> list[MonthlyTotals]:
+        """Totals of the months that have transactions; months without any are left out"""
+        month = extract("month", Transaction.registration_date)
+        statement = (
+            select(
+                month.label("month"),
+                func.sum(
+                    case(
+                        (
+                            Transaction.type_of_transaction == TypeOfTransaction.INCOME.value,
+                            Transaction.amount,
+                        )
+                    )
+                ).label("total_income"),
+                func.sum(
+                    case(
+                        (
+                            Transaction.type_of_transaction == TypeOfTransaction.EXPENSE.value,
+                            Transaction.amount,
+                        )
+                    )
+                ).label("total_expense"),
+            )
+            .where(
+                (Transaction.user_id == user_id)
+                & (Transaction.registration_date >= date(year, 1, 1))
+                & (Transaction.registration_date <= date(year, 12, 31))
+            )
+            .group_by(month)
+        )
+        return [
+            MonthlyTotals(
+                month=int(row.month),
+                income=self._to_cents(row.total_income),
+                expense=self._to_cents(row.total_expense),
+            )
+            for row in self.session.execute(statement).all()
+        ]
+
+    def get_expenses_by_category(
+        self, user_id: int, start_date: date, end_date: date
+    ) -> list[CategoryAmount]:
+        """Expense totals per category; uncategorized expenses come with category None"""
+        statement = (
+            select(Category.name.label("category"), func.sum(Transaction.amount).label("total"))
+            .select_from(Transaction)
+            .outerjoin(Category, Transaction.category_id == Category.category_id)
+            .where(
+                (Transaction.user_id == user_id)
+                & (Transaction.type_of_transaction == TypeOfTransaction.EXPENSE.value)
+                & (Transaction.registration_date >= start_date)
+                & (Transaction.registration_date <= end_date)
+            )
+            .group_by(Transaction.category_id, Category.name)
+        )
+        return [
+            CategoryAmount(category=row.category, amount=self._to_cents(row.total))
+            for row in self.session.execute(statement).all()
+        ]

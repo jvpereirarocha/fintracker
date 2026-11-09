@@ -4,7 +4,7 @@ from typing import Any, Protocol
 from app.domain.entities.categories import CategoryEntity, PartialUpdateCategory
 from app.domain.entities.users import UserEntity
 from app.domain.value_objects.auth import SavedUser, UserLogin
-from app.domain.value_objects.dashboard import DashboardValues
+from app.domain.value_objects.dashboard import CategoryAmount, DashboardValues, MonthlyTotals
 
 
 class AbstractRepository(Protocol):
@@ -30,6 +30,15 @@ class AbstractTransactionRepository(AbstractRepository):
         start_date: date,
         end_date: date,
     ) -> DashboardValues: ...
+
+    def get_monthly_totals_by_year(self, user_id: int, year: int) -> list[MonthlyTotals]: ...
+
+    def get_expenses_by_category(
+        self,
+        user_id: int,
+        start_date: date,
+        end_date: date,
+    ) -> list[CategoryAmount]: ...
 
 
 class AbstractUserRepository(AbstractRepository):
