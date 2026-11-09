@@ -2,6 +2,32 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-11-09)
+
+### Bug Fixes
+
+- **build**: Show pytest output when running make test in a terminal
+  ([`af1396b`](https://github.com/jvpereirarocha/fintracker/commit/af1396b8303efb67b1788403ed2308b462af7ffd))
+
+### Build System
+
+- Add dockerized test environment and Makefile
+  ([`ebbc4ff`](https://github.com/jvpereirarocha/fintracker/commit/ebbc4ff40535f7f321a62ea32d43b6f316e3be8a))
+
+### Documentation
+
+- Add OpenAPI spec including dashboard chart endpoints
+  ([`55259df`](https://github.com/jvpereirarocha/fintracker/commit/55259dfd7a1c5a8ce2f444d1900db0965bcfab7f))
+
+- Use a generic username in the OpenAPI example
+  ([`b0c5e92`](https://github.com/jvpereirarocha/fintracker/commit/b0c5e92018a7849ad0add6f412b4f2b5de7d32a7))
+
+### Features
+
+- Add dashboard chart endpoints for monthly totals and expenses by category
+  ([`ba653bc`](https://github.com/jvpereirarocha/fintracker/commit/ba653bc5efd3b9bf04f1319bab869cceb02bb4c0))
+
+
 ## v1.2.0 (2026-11-05)
 
 ### Features

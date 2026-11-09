@@ -13,4 +13,4 @@ images:
   - name: jvrochadev/fintracker
     # Updated by python-semantic-release on each release (version_variables in pyproject.toml).
     # Keep it quoted so YAML reads it as a string.
-    newTag: "1.2.0"
+    newTag: "1.3.0"
