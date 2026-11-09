@@ -1,0 +1,40 @@
+# Throwaway environment for the test suite: `make test`
+# Uses fixed test-only credentials, so no .env is needed.
+name: fintracker-test
+
+x-test-env: &test-env
+  POSTGRES_USER: fintracker_test
+  POSTGRES_PASSWORD: fintracker_test
+  POSTGRES_DB: fintracker_test
+  POSTGRES_HOST: db-test
+  POSTGRES_PORT: "5432"
+  JWT_SECRET_KEY: test-only-secret-key
+  ALGORITHM: HS256
+  TOKEN_TYPE: Bearer
+  GH_TOKEN: not-used-in-tests
+
+services:
+  db-test:
+    image: postgres:15-alpine
+    environment: *test-env
+    # Data lives in memory and disappears with the container
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fintracker_test -d fintracker_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment: *test-env
+    volumes:
+      # Run against the working tree without rebuilding the image
+      - ./app:/src/app
+      - ./tests:/src/tests
+    depends_on:
+      db-test:
+        condition: service_healthy
