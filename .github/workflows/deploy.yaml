@@ -25,6 +25,18 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Running tests
+        # app.infra.configs.settings.Settings is read at import time, and there is
+        # no .env on the runner; these are test-only values (same as docker-compose.test.yaml)
+        env:
+          POSTGRES_USER: fintracker_test
+          POSTGRES_PASSWORD: fintracker_test
+          POSTGRES_DB: fintracker_test
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          JWT_SECRET_KEY: test-only-secret-key
+          ALGORITHM: HS256
+          TOKEN_TYPE: Bearer
+          GH_TOKEN: not-used-in-tests
         run: |
           pytest --tb=short -q
 
