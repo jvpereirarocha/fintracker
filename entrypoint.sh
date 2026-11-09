@@ -7,4 +7,5 @@ echo "First of all, let's run the migrations"
 alembic upgrade head
 
 echo "Latest, we will run the server"
-exec uvicorn 'app.main:app' --host 0.0.0.0 --port 8000 --reload
+# --no-access-log: RequestLoggingMiddleware writes one JSON line per request instead
+exec uvicorn 'app.main:app' --host 0.0.0.0 --port 8000 --no-access-log

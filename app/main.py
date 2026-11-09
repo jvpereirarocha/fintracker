@@ -1,10 +1,19 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.handlers import domain_exception_handler, global_500_exception_handler
+from app.api.handlers import (
+    domain_exception_handler,
+    global_500_exception_handler,
+    validation_exception_handler,
+)
+from app.api.middlewares import RequestLoggingMiddleware
 from app.api.v1 import api_v1_router
 from app.domain.exceptions.base import BaseDomainException
+from app.logging_config import setup_logging
+
+setup_logging()
 
 app = FastAPI(title="Fintracker API")
 
@@ -26,6 +35,11 @@ app.add_middleware(
 app.include_router(router=api_v1_router)
 
 app.add_exception_handler(BaseDomainException, domain_exception_handler)  # type: ignore
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore
 app.add_exception_handler(Exception, global_500_exception_handler)
 
 Instrumentator().instrument(app).expose(app)
+
+# Added last so it is the outermost user middleware: its duration covers CORS and the
+# instrumentator, and its X-Request-ID header is set on every response they produce
+app.add_middleware(RequestLoggingMiddleware)
