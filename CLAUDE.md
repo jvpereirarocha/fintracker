@@ -11,6 +11,7 @@ make down        # stop them
 make logs        # follow API logs
 make migrate     # alembic upgrade head inside the running API container
 make test        # throwaway Postgres + migrations + pytest in Docker, torn down afterwards
+make test ARGS="-v -k dashboard"   # pass extra pytest flags (default: --tb=short -q)
 make test-local  # pytest on the host
 make lint / make format / make typecheck
 ```

@@ -24,14 +24,20 @@ migrate: ## Apply migrations inside the running API container
 
 # ------------------------------------------------------------------ tests
 
+# Extra pytest flags, e.g. `make test ARGS="-v -k dashboard"`
+ARGS ?= --tb=short -q
+
+# `run` attaches the terminal straight to the tests container: pytest output and
+# colors show as-is, without compose's interactive menu redrawing over them
 test: ## Start a clean test database, run migrations + pytest, then tear it all down
-	$(COMPOSE_TEST) up --build --attach tests --abort-on-container-exit --exit-code-from tests; \
+	$(COMPOSE_TEST) build tests
+	$(COMPOSE_TEST) run --rm tests sh -c "alembic upgrade head && pytest $(ARGS)"; \
 		status=$$?; \
-		$(COMPOSE_TEST) down -v --remove-orphans; \
+		$(COMPOSE_TEST) --progress quiet down -v --remove-orphans; \
 		exit $$status
 
 test-down: ## Remove leftover test containers
-	$(COMPOSE_TEST) down -v --remove-orphans
+	$(COMPOSE_TEST) --progress quiet down -v --remove-orphans
 
 test-local: ## Run pytest on the host, without Docker
 	pytest --tb=short -q
