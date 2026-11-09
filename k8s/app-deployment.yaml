@@ -5,6 +5,10 @@ metadata:
   namespace: fintracker-dev
 spec:
   replicas: 2
+  # Keep only the last 2 old ReplicaSets (3 in total with the current one) for
+  # `kubectl rollout undo`; the default (10) piles up idle ReplicaSets.
+  # The normal rollback path is reverting the commit in git.
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: fintracker
