@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.1 (2026-11-09)
+
+### Bug Fixes
+
+- Log the path of plain Starlette routes instead of "unmatched"
+  ([`e9a8b6d`](https://github.com/jvpereirarocha/fintracker/commit/e9a8b6dbd1cf1d5adf0b72ab06a56396a5678c8d))
+
+
 ## v1.4.0 (2026-11-09)
 
 ### Bug Fixes
