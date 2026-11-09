@@ -1,6 +1,7 @@
 from decimal import Decimal
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, PlainSerializer, field_serializer
 
 from app.domain.business_logic.conversor import format_decimal_to_brl_format
 
@@ -36,3 +37,31 @@ class DashboardResponse(BaseModel):
     @field_serializer("yearly_balance")
     def serialize_yearly_balance(self, amount: Decimal) -> str:
         return format_decimal_to_brl_format(amount=amount)
+
+
+# Chart payloads send money as plain numbers; the frontend formats them as R$
+Money = Annotated[Decimal, PlainSerializer(float, return_type=float)]
+
+
+class MonthlyTotalsResponse(BaseModel):
+    month: int
+    income: Money
+    expense: Money
+
+
+class MonthlySummaryResponse(BaseModel):
+    year: int
+    months: list[MonthlyTotalsResponse]
+
+
+class CategoryExpenseResponse(BaseModel):
+    category: str
+    amount: Money
+    percentage: Money
+
+
+class ExpensesByCategoryResponse(BaseModel):
+    month: int
+    year: int
+    total: Money
+    categories: list[CategoryExpenseResponse]
