@@ -606,7 +606,7 @@ components:
       type: object
       required: [username, email, password, confirmPassword]
       properties:
-        username: { type: string, example: jvictor }
+        username: { type: string, example: johndoe }
         email: { type: string, format: email, example: user@example.com }
         password: { type: string, format: password }
         confirmPassword:
