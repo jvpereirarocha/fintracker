@@ -18,6 +18,7 @@ import time
 import uuid
 
 from starlette.datastructures import Headers, MutableHeaders
+from starlette.routing import Match
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.logging_config import REQUEST_LOGGER_NAME
@@ -29,6 +30,21 @@ REQUEST_ID_HEADER = "x-request-id"
 SKIPPED_PATHS = frozenset({"/metrics"})
 # The incoming request id is client-controlled: accept only short, plain ids
 _VALID_REQUEST_ID = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+
+
+def _route_template(scope: Scope) -> str:
+    # FastAPI's APIRoute stores itself in scope["route"] when it matches
+    route = scope.get("route")
+    if route is not None:
+        return str(route.path)
+    # Plain Starlette routes (/openapi.json, /docs, /redoc) do not: look the match up here.
+    # This runs only for those and for 404s, so the extra loop costs nothing on API routes.
+    router = getattr(scope.get("app"), "router", None)
+    for candidate in getattr(router, "routes", []):
+        match, _ = candidate.matches(scope)
+        if match == Match.FULL:
+            return str(getattr(candidate, "path", "unmatched"))
+    return "unmatched"
 
 
 def _request_id_from(scope: Scope) -> str:
@@ -76,11 +92,10 @@ class RequestLoggingMiddleware:
                 status_code = 500
             raise
         finally:
-            route = scope.get("route")
             record: dict[str, object] = {
                 "event": "request",
                 "method": scope["method"],
-                "route": getattr(route, "path", None) or "unmatched",
+                "route": _route_template(scope),
                 "status": status_code,
                 "duration_ms": round((time.perf_counter() - start) * 1000),
                 "request_id": request_id,

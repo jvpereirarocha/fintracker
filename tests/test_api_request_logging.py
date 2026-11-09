@@ -142,3 +142,13 @@ def test_metrics_endpoint_is_not_logged(
 
     assert response.status_code == 200
     assert request_logs == []
+
+
+@pytest.mark.parametrize("path", ["/openapi.json", "/docs"])
+def test_plain_starlette_routes_are_logged_with_their_path(
+    client: TestClient, request_logs: list[dict[str, Any]], path: str
+) -> None:
+    response = client.get(path)
+
+    assert response.status_code == 200
+    assert request_logs[0]["route"] == path
